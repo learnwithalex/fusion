@@ -64,7 +64,7 @@ export function Hero() {
 
                 <h1 className="mb-6 max-w-4xl text-7xl font-bold tracking-tight text-white leading-[1.1]">
                     The Future of <br />
-                    <span className="bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent animate-gradient-x">
+                    <span className="bg-gradient-to-r from-fuchsia-400 via-cyan-400 to-fuchsia-400 bg-clip-text text-transparent animate-gradient-x">
                         Digital Licensing
                     </span>
                 </h1>

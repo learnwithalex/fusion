@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutGrid, Globe, PlusSquare, CircleUser, PieChart, Activity } from 'lucide-react'
+import { LayoutGrid, Globe, PlusSquare, CircleUser, Activity } from 'lucide-react'
 import Link from "next/link"
 import { usePathname } from 'next/navigation'
 import { cn } from "@/lib/utils"
@@ -10,7 +10,6 @@ const navItems = [
   { icon: Globe, label: "Explore", href: "/explore" },
   { icon: PlusSquare, label: "Upload", href: "/upload" },
   { icon: CircleUser, label: "Profile", href: "/profile" },
-  { icon: PieChart, label: "Dashboard", href: "/dashboard" },
   { icon: Activity, label: "Analytics", href: "/analytics" },
 ]
 

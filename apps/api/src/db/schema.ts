@@ -1,0 +1,112 @@
+import { pgTable, serial, text, timestamp, boolean, integer, decimal, varchar, json } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+
+export const users = pgTable("users", {
+    id: serial("id").primaryKey(),
+    walletAddress: varchar("wallet_address", { length: 42 }).notNull().unique(),
+    nonce: text("nonce"),
+    name: text("name"),
+    bio: text("bio"),
+    website: text("website"),
+    twitter: text("twitter"),
+    spotify: text("spotify"),
+    youtube: text("youtube"),
+    tiktok: text("tiktok"),
+    instagram: text("instagram"),
+    profileImage: text("profile_image"),
+    headerImage: text("header_image"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const follows = pgTable("follows", {
+    id: serial("id").primaryKey(),
+    followerId: integer("follower_id").references(() => users.id),
+    followingId: integer("following_id").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const sessions = pgTable("sessions", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id),
+    token: text("token").notNull(),
+    isValid: boolean("is_valid").default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const assets = pgTable("assets", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id).notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    thumbnail: text("thumbnail"),
+    video: text("video"),
+    tags: text("tags"), // Comma separated or JSON? Let's use text for now as per MD
+    type: text("type").notNull(), // Music, Art, Video, Game Model
+    licenseId: integer("license_id"), // Can be null if not yet set? Or references licenses table
+    isRemixed: boolean("is_remixed").default(false),
+    remixOf: integer("remix_of"), // References parent asset ID
+    creationStatus: text("creation_status").default("draft"), // draft, live
+    assetStatus: text("asset_status").default("new"), // buy now, auction, new
+    tokenId: text("token_id"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const assetFiles = pgTable("asset_files", {
+    id: serial("id").primaryKey(),
+    assetId: integer("asset_id").references(() => assets.id).notNull(),
+    file: text("file").notNull(), // Encrypted URL
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const assetMetadata = pgTable("asset_metadata", {
+    id: serial("id").primaryKey(),
+    assetFileId: integer("asset_file_id").references(() => assetFiles.id).notNull(),
+    fileType: text("file_type"),
+    size: text("size"),
+    contentHash: text("content_hash"),
+    mimeType: text("mime_type"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const licenses = pgTable("licenses", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id).notNull(),
+    price: decimal("price", { precision: 18, scale: 8 }).notNull(),
+    royalty: integer("royalty").notNull(), // Percentage
+    royaltyDuration: text("royalty_duration"), // e.g., "30 days", "unlimited"
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const transactions = pgTable("transactions", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id).notNull(),
+    assetId: integer("asset_id").references(() => assets.id).notNull(),
+    transactionType: text("transaction_type").notNull(), // minted, remixed, sold, bought
+    amount: decimal("amount", { precision: 18, scale: 8 }),
+    tnxhash: text("tnxhash"),
+    status: text("status").default("pending"), // pending, success, failed
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+    assets: many(assets),
+    followers: many(follows, { relationName: "followers" }),
+    following: many(follows, { relationName: "following" }),
+}));
+
+export const assetsRelations = relations(assets, ({ one, many }) => ({
+    creator: one(users, {
+        fields: [assets.userId],
+        references: [users.id],
+    }),
+    files: many(assetFiles),
+    transactions: many(transactions),
+}));

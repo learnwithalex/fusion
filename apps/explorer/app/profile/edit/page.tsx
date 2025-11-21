@@ -1,3 +1,5 @@
+"use client"
+
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { Button } from "@/components/ui/button"
@@ -5,11 +7,127 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Separator } from "@/components/ui/separator"
-import { User, Upload, Save, ArrowLeft, Twitter, Globe, MapPin } from 'lucide-react'
+import { ImageUpload } from "@/components/ImageUpload"
+import { Save, ArrowLeft, Twitter, Globe, Music, Youtube, Instagram } from 'lucide-react'
+import { FaTiktok, FaSpotify } from 'react-icons/fa'
 import Link from "next/link"
+import { useState, useEffect } from "react"
+import { useBackendAuth } from "@/hooks/useBackendAuth"
+import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
 export default function EditProfilePage() {
+    const { token } = useBackendAuth()
+    const router = useRouter()
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+
+    const [name, setName] = useState("")
+    const [bio, setBio] = useState("")
+    const [website, setWebsite] = useState("")
+    const [twitter, setTwitter] = useState("")
+    const [spotify, setSpotify] = useState("")
+    const [youtube, setYoutube] = useState("")
+    const [tiktok, setTiktok] = useState("")
+    const [instagram, setInstagram] = useState("")
+    const [profileImage, setProfileImage] = useState("")
+    const [headerImage, setHeaderImage] = useState("")
+
+    useEffect(() => {
+        if (!token) {
+            setLoading(false)
+            return
+        }
+
+        let isMounted = true
+
+        const loadProfile = async () => {
+            try {
+                await fetchProfile()
+            } catch (error) {
+                if (isMounted) {
+                    console.error("Failed to load profile:", error)
+                }
+            }
+        }
+
+        loadProfile()
+
+        return () => {
+            isMounted = false
+        }
+    }, [token])
+
+    const fetchProfile = async () => {
+        try {
+            const res = await fetch("http://localhost:3001/users/me", {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            const data = await res.json()
+
+            setName(data.name || "")
+            setBio(data.bio || "")
+            setWebsite(data.website || "")
+            setTwitter(data.twitter || "")
+            setSpotify(data.spotify || "")
+            setYoutube(data.youtube || "")
+            setTiktok(data.tiktok || "")
+            setInstagram(data.instagram || "")
+            setProfileImage(data.profileImage || "")
+            setHeaderImage(data.headerImage || "")
+        } catch (error) {
+            console.error("Failed to fetch profile:", error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleSave = async () => {
+        if (!token) return
+
+        setSaving(true)
+        try {
+            await fetch("http://localhost:3001/users/me", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    name,
+                    bio,
+                    website,
+                    twitter,
+                    spotify,
+                    youtube,
+                    tiktok,
+                    instagram,
+                    profileImage,
+                    headerImage
+                })
+            })
+
+            router.push("/profile")
+        } catch (error) {
+            console.error("Failed to update profile:", error)
+            alert("Failed to update profile")
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+                <Navbar />
+                <Sidebar />
+                <main className="ml-20 px-8 py-8 flex items-center justify-center min-h-screen">
+                    <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+                </main>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
             <Navbar />
@@ -32,25 +150,19 @@ export default function EditProfilePage() {
                     <div className="grid gap-8">
                         {/* Profile Images */}
                         <Card className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md shadow-xl">
-                            <div className="relative h-48 w-full bg-gradient-to-r from-cyan-500/20 via-violet-500/20 to-fuchsia-500/20 group cursor-pointer">
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition-opacity group-hover:opacity-100">
-                                    <Button variant="secondary" className="gap-2 rounded-full backdrop-blur-md">
-                                        <Upload className="h-4 w-4" />
-                                        Change Cover
-                                    </Button>
-                                </div>
-                            </div>
+                            <ImageUpload
+                                type="header"
+                                value={headerImage}
+                                onChange={setHeaderImage}
+                            />
 
                             <div className="px-8 pb-8">
-                                <div className="relative -mt-16 mb-6 inline-block">
-                                    <div className="h-32 w-32 overflow-hidden rounded-[2rem] border-4 border-slate-950 bg-slate-900 shadow-2xl group cursor-pointer relative">
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100 z-10">
-                                            <Upload className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div className="h-full w-full bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center">
-                                            <User className="h-12 w-12 text-white" />
-                                        </div>
-                                    </div>
+                                <div className="relative -mt-16 mb-6">
+                                    <ImageUpload
+                                        type="profile"
+                                        value={profileImage}
+                                        onChange={setProfileImage}
+                                    />
                                 </div>
 
                                 <div className="space-y-6">
@@ -58,7 +170,8 @@ export default function EditProfilePage() {
                                         <Label htmlFor="username" className="text-base">Display Name</Label>
                                         <Input
                                             id="username"
-                                            defaultValue="NeonCreator"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
                                             className="h-12 rounded-xl border-white/10 bg-white/5 px-4 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
                                         />
                                     </div>
@@ -67,10 +180,11 @@ export default function EditProfilePage() {
                                         <Label htmlFor="bio" className="text-base">Bio</Label>
                                         <Textarea
                                             id="bio"
-                                            defaultValue="Digital artist and music producer creating Web3-native IP. Specializing in synthwave aesthetics and futuristic soundscapes."
+                                            value={bio}
+                                            onChange={(e) => setBio(e.target.value)}
                                             className="min-h-[120px] rounded-xl border-white/10 bg-white/5 px-4 py-3 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50 resize-none"
                                         />
-                                        <p className="text-xs text-muted-foreground text-right">124/500 characters</p>
+                                        <p className="text-xs text-muted-foreground text-right">{bio.length}/500 characters</p>
                                     </div>
                                 </div>
                             </div>
@@ -86,7 +200,9 @@ export default function EditProfilePage() {
                                         <Globe className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             id="website"
-                                            defaultValue="neon-creator.xyz"
+                                            value={website}
+                                            onChange={(e) => setWebsite(e.target.value)}
+                                            placeholder="your-website.com"
                                             className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
                                         />
                                     </div>
@@ -98,19 +214,65 @@ export default function EditProfilePage() {
                                         <Twitter className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
                                             id="twitter"
-                                            defaultValue="@neoncreator"
+                                            value={twitter}
+                                            onChange={(e) => setTwitter(e.target.value)}
+                                            placeholder="@username"
                                             className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
                                         />
                                     </div>
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="location" className="text-base">Location</Label>
+                                    <Label htmlFor="spotify" className="text-base">Spotify</Label>
                                     <div className="relative">
-                                        <MapPin className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <FaSpotify className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
-                                            id="location"
-                                            defaultValue="Los Angeles, CA"
+                                            id="spotify"
+                                            value={spotify}
+                                            onChange={(e) => setSpotify(e.target.value)}
+                                            placeholder="Artist URL or username"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="youtube" className="text-base">YouTube</Label>
+                                    <div className="relative">
+                                        <Youtube className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="youtube"
+                                            value={youtube}
+                                            onChange={(e) => setYoutube(e.target.value)}
+                                            placeholder="Channel URL or @handle"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="tiktok" className="text-base">TikTok</Label>
+                                    <div className="relative">
+                                        <FaTiktok className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="tiktok"
+                                            value={tiktok}
+                                            onChange={(e) => setTiktok(e.target.value)}
+                                            placeholder="@username"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <Label htmlFor="instagram" className="text-base">Instagram</Label>
+                                    <div className="relative">
+                                        <Instagram className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                        <Input
+                                            id="instagram"
+                                            value={instagram}
+                                            onChange={(e) => setInstagram(e.target.value)}
+                                            placeholder="@username"
                                             className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
                                         />
                                     </div>
@@ -124,9 +286,13 @@ export default function EditProfilePage() {
                                     Cancel
                                 </Button>
                             </Link>
-                            <Button className="h-12 gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-8 font-semibold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-violet-400 hover:shadow-cyan-500/40 transition-all hover:scale-105">
-                                <Save className="h-4 w-4" />
-                                Save Changes
+                            <Button
+                                onClick={handleSave}
+                                disabled={saving}
+                                className="h-12 gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-8 font-semibold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-violet-400 hover:shadow-cyan-500/40 transition-all hover:scale-105"
+                            >
+                                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                {saving ? "Saving..." : "Save Changes"}
                             </Button>
                         </div>
                     </div>

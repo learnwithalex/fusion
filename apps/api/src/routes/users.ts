@@ -1,0 +1,254 @@
+import { Router } from "express";
+import { db } from "../db";
+import { users, follows, assets, transactions } from "../db/schema";
+import { eq, and, desc, sql } from "drizzle-orm";
+import { authenticate } from "../middleware/auth";
+
+const router = Router();
+
+// Get current user's profile
+router.get("/me", authenticate, async (req, res) => {
+    const userId = req.user!.id;
+
+    try {
+        const user = await db.select().from(users).where(eq(users.id, userId));
+
+        if (!user[0]) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Don't send nonce to client
+        const { nonce, ...userData } = user[0];
+        res.json(userData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch user profile" });
+    }
+});
+
+// Update current user's profile
+router.put("/me", authenticate, async (req, res) => {
+    const userId = req.user!.id;
+    const { name, bio, website, twitter, spotify, youtube, tiktok, instagram, profileImage, headerImage } = req.body;
+
+    try {
+        const updateData: any = { updatedAt: new Date() };
+
+        if (name !== undefined) updateData.name = name;
+        if (bio !== undefined) updateData.bio = bio;
+        if (website !== undefined) updateData.website = website;
+        if (twitter !== undefined) updateData.twitter = twitter;
+        if (spotify !== undefined) updateData.spotify = spotify;
+        if (youtube !== undefined) updateData.youtube = youtube;
+        if (tiktok !== undefined) updateData.tiktok = tiktok;
+        if (instagram !== undefined) updateData.instagram = instagram;
+        if (profileImage !== undefined) updateData.profileImage = profileImage;
+        if (headerImage !== undefined) updateData.headerImage = headerImage;
+
+        const [updatedUser] = await db.update(users)
+            .set(updateData)
+            .where(eq(users.id, userId))
+            .returning();
+
+        const { nonce, ...userData } = updatedUser;
+        res.json(userData);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to update user profile" });
+    }
+});
+
+// Get current user's statistics
+router.get("/me/stats", authenticate, async (req, res) => {
+    const userId = req.user!.id;
+
+    try {
+        // Count uploads
+        const uploadsResult = await db.select({ count: sql<number>`count(*)` })
+            .from(assets)
+            .where(eq(assets.userId, userId));
+        const uploads = Number(uploadsResult[0]?.count || 0);
+
+        // Count licenses sold (transactions where user is the seller)
+        const licensesResult = await db.select({ count: sql<number>`count(*)` })
+            .from(transactions)
+            .innerJoin(assets, eq(transactions.assetId, assets.id))
+            .where(and(
+                eq(assets.userId, userId),
+                eq(transactions.transactionType, "bought")
+            ));
+        const licenses = Number(licensesResult[0]?.count || 0);
+
+        // Calculate total earnings
+        const earningsResult = await db.select({
+            total: sql<string>`COALESCE(SUM(${transactions.amount}), '0')`
+        })
+            .from(transactions)
+            .innerJoin(assets, eq(transactions.assetId, assets.id))
+            .where(and(
+                eq(assets.userId, userId),
+                eq(transactions.transactionType, "bought")
+            ));
+        const earnings = earningsResult[0]?.total || "0";
+
+        // TODO: Implement followers count when follower system is added
+        const followers = 0;
+
+        res.json({
+            uploads,
+            licenses,
+            earnings: `${earnings} CAMP`,
+            followers
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch user statistics" });
+    }
+});
+
+// Get Public Profile by Wallet Address
+router.get("/:walletAddress", async (req, res) => {
+    const { walletAddress } = req.params;
+
+    try {
+        const userResult = await db.select().from(users).where(eq(users.walletAddress, walletAddress));
+        const user = userResult[0];
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Get stats
+        const uploadsCount = await db.$count(assets, eq(assets.userId, user.id));
+
+        // Real query for licenses sold
+        const licensesSoldResult = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(transactions)
+            .innerJoin(assets, eq(transactions.assetId, assets.id))
+            .where(and(
+                eq(assets.userId, user.id),
+                eq(transactions.transactionType, 'bought')
+            ));
+
+        const licensesSold = Number(licensesSoldResult[0]?.count || 0);
+
+        res.json({ ...user, stats: { uploads: uploadsCount, licensesSold } });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch profile" });
+    }
+});
+
+// Update Profile
+router.patch("/:id", async (req, res) => {
+    const { id } = req.params;
+    const { name, bio, website, twitter, spotify, youtube, tiktok, instagram, profileImage, headerImage } = req.body;
+
+    try {
+        await db.update(users)
+            .set({ name, bio, website, twitter, spotify, youtube, tiktok, instagram, profileImage, headerImage, updatedAt: new Date() })
+            .where(eq(users.id, parseInt(id)));
+
+        const updatedUser = await db.select().from(users).where(eq(users.id, parseInt(id)));
+        res.json(updatedUser[0]);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update profile" });
+    }
+});
+
+// Follow User
+router.post("/:id/follow", async (req, res) => {
+    const { id } = req.params; // User to follow
+    const { followerId } = req.body; // Current user ID (from auth middleware in real app)
+
+    try {
+        await db.insert(follows).values({
+            followerId: parseInt(followerId),
+            followingId: parseInt(id),
+        });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to follow user" });
+    }
+});
+
+// Unfollow User
+router.delete("/:id/follow", async (req, res) => {
+    const { id } = req.params;
+    const { followerId } = req.body;
+
+    try {
+        await db.delete(follows).where(
+            and(
+                eq(follows.followerId, parseInt(followerId)),
+                eq(follows.followingId, parseInt(id))
+            )
+        );
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to unfollow user" });
+    }
+});
+
+// Get Created Assets
+router.get("/:id/assets/created", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const userAssets = await db.select().from(assets).where(eq(assets.userId, parseInt(id)));
+        res.json(userAssets);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch created assets" });
+    }
+});
+
+// Get Licensed Assets (Assets bought by user)
+router.get("/:id/assets/licensed", async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Join transactions and assets to find assets bought by user
+        const licensedAssets = await db
+            .select({
+                id: assets.id,
+                userId: assets.userId,
+                name: assets.name,
+                description: assets.description,
+                thumbnail: assets.thumbnail,
+                video: assets.video,
+                tags: assets.tags,
+                type: assets.type,
+                licenseId: assets.licenseId,
+                isRemixed: assets.isRemixed,
+                remixOf: assets.remixOf,
+                creationStatus: assets.creationStatus,
+                assetStatus: assets.assetStatus,
+                tokenId: assets.tokenId,
+                createdAt: assets.createdAt,
+                updatedAt: assets.updatedAt
+            })
+            .from(assets)
+            .innerJoin(transactions, eq(assets.id, transactions.assetId))
+            .where(and(
+                eq(transactions.userId, parseInt(id)),
+                eq(transactions.transactionType, 'bought')
+            ));
+
+        res.json(licensedAssets);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch licensed assets" });
+    }
+});
+
+// Get Activity
+router.get("/:id/activity", async (req, res) => {
+    const { id } = req.params;
+    try {
+        const activity = await db.select().from(transactions)
+            .where(eq(transactions.userId, parseInt(id)))
+            .orderBy(desc(transactions.createdAt));
+        res.json(activity);
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch activity" });
+    }
+});
+
+export default router;

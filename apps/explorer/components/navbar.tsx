@@ -4,11 +4,27 @@ import { Search, Wallet, Loader2, User } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useAuth, useAuthState } from "@campnetwork/origin/react";
+import { useAuth, useAuthState, useConnect } from "@campnetwork/origin/react";
+import { useState, useEffect } from "react";
+import { useBackendAuth } from "@/hooks/useBackendAuth";
 
 export function Navbar() {
   const auth = useAuth();
-  const { authenticated, loading } = useAuthState();
+  const { authenticated: isWalletConnected, loading } = useAuthState();
+  const { connect, disconnect } = useConnect();
+  const { login, logout, walletAddress, isAuthenticated, isAuthenticating } = useBackendAuth();
+
+  const handleConnect = async () => {
+    const result = await connect()
+    if (result.success) {
+      await login(result.walletAddress)
+    }
+  }
+
+  const handleDisconnect = async () => {
+    await disconnect()
+    logout()
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border/10 bg-background/80 backdrop-blur-xl">
@@ -37,17 +53,17 @@ export function Navbar() {
           <Button
             variant="outline"
             className="gap-2 rounded-full border-border/20 bg-white/5 backdrop-blur-md hover:bg-white/10 hover:border-white/20 transition-all"
-            onClick={() => !authenticated && auth.connect()}
-            disabled={loading}
+            onClick={() => isAuthenticated ? handleDisconnect() : handleConnect()}
+            disabled={loading || isAuthenticating}
           >
-            {loading ? (
+            {loading || isAuthenticating ? (
               <Loader2 className="h-4 w-4 animate-spin" />
-            ) : authenticated ? (
+            ) : isAuthenticated ? (
               <User className="h-4 w-4" />
             ) : (
               <Wallet className="h-4 w-4" />
             )}
-            {loading ? "Connecting..." : authenticated ? "Connected" : "Connect Wallet"}
+            {loading ? "Connecting..." : isAuthenticating ? "Verifying..." : isAuthenticated ? (walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connected") : "Connect Wallet"}
           </Button>
         </div>
       </div>
