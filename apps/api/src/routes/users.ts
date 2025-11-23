@@ -6,6 +6,28 @@ import { authenticate } from "../middleware/auth";
 
 const router = Router();
 
+// Search Users
+router.get("/", async (req, res) => {
+    const { search } = req.query;
+
+    try {
+        let query = db.select().from(users);
+
+        if (search) {
+            // @ts-ignore
+            query = query.where(
+                sql`${users.name} ILIKE ${`%${search}%`} OR ${users.walletAddress} ILIKE ${`%${search}%`}`
+            );
+        }
+
+        const results = await query.limit(10);
+        res.json(results);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to search users" });
+    }
+});
+
 // Get current user's profile
 router.get("/me", authenticate, async (req, res) => {
     const userId = req.user!.id;

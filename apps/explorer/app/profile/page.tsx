@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { User, LinkIcon, Twitter, Copy, ExternalLink, Music, Image, Video, Gamepad2, Sparkles, Youtube, Instagram, Loader2 } from 'lucide-react'
+import { User, LinkIcon, Twitter, Copy, ExternalLink, Music, Image, Video, Gamepad2, Sparkles, Youtube, Instagram, Loader2, Upload } from 'lucide-react'
 import { FaTiktok, FaSpotify } from 'react-icons/fa'
 import Link from "next/link"
 import { useState, useEffect } from "react"
@@ -36,6 +36,26 @@ interface UserStats {
   followers: number
 }
 
+interface Asset {
+  id: number
+  name: string
+  description: string | null
+  thumbnail: string | null
+  type: string
+  createdAt: string
+  license?: {
+    price: string
+  }
+}
+
+interface Activity {
+  id: number
+  transactionType: string
+  amount: string
+  status: string
+  createdAt: string
+}
+
 const typeIcons = {
   Music: Music,
   Art: Image,
@@ -49,6 +69,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [stats, setStats] = useState<UserStats | null>(null)
+  const [uploads, setUploads] = useState<Asset[]>([])
+  const [licensedItems, setLicensedItems] = useState<Asset[]>([])
+  const [activity, setActivity] = useState<Activity[]>([])
 
   useEffect(() => {
     if (!token) {
@@ -82,6 +105,11 @@ export default function ProfilePage() {
       })
       const data = await res.json()
       setProfile(data)
+      if (data.id) {
+        fetchUploads(data.id)
+        fetchLicensedItems(data.id)
+        fetchActivity(data.id)
+      }
     } catch (error) {
       console.error("Failed to fetch profile:", error)
     } finally {
@@ -98,6 +126,36 @@ export default function ProfilePage() {
       setStats(data)
     } catch (error) {
       console.error("Failed to fetch stats:", error)
+    }
+  }
+
+  const fetchUploads = async (userId: number) => {
+    try {
+      const res = await fetch(`http://localhost:3001/assets?userId=${userId}&sort=recent`)
+      const data = await res.json()
+      setUploads(data)
+    } catch (error) {
+      console.error("Failed to fetch uploads:", error)
+    }
+  }
+
+  const fetchLicensedItems = async (userId: number) => {
+    try {
+      const res = await fetch(`http://localhost:3001/users/${userId}/assets/licensed`)
+      const data = await res.json()
+      setLicensedItems(data)
+    } catch (error) {
+      console.error("Failed to fetch licensed items:", error)
+    }
+  }
+
+  const fetchActivity = async (userId: number) => {
+    try {
+      const res = await fetch(`http://localhost:3001/users/${userId}/activity`)
+      const data = await res.json()
+      setActivity(data)
+    } catch (error) {
+      console.error("Failed to fetch activity:", error)
     }
   }
 
@@ -188,13 +246,13 @@ export default function ProfilePage() {
                         </button>
                       </div>
                       <a
-                        href={`https://basescan.org/address/${profile.walletAddress}`}
+                        href={`https://basecamp.cloud.blockscout.com/address/${profile.walletAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-cyan-200/70 hover:text-white transition-colors"
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Basescan
+                        Basecamp
                       </a>
                     </div>
 
@@ -267,7 +325,7 @@ export default function ProfilePage() {
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Licenses Sold</p>
                   </div>
                   <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{stats.earnings}</p>
+                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{parseFloat(stats.earnings).toFixed(2)} CAMP</p>
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Earnings</p>
                   </div>
                   <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
@@ -288,38 +346,197 @@ export default function ProfilePage() {
             </TabsList>
 
             <TabsContent value="uploads" className="mt-0">
-              <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-12 backdrop-blur-md text-center">
-                <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-muted-foreground" />
+              {uploads.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {uploads.map((asset) => (
+                    <Link href={`/asset/${asset.id}`} key={asset.id}>
+                      <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
+                        {/* Image */}
+                        <div className="aspect-[4/3] overflow-hidden">
+                          <div className="h-full w-full bg-slate-900">
+                            {asset.thumbnail ? (
+                              <img
+                                src={asset.thumbnail}
+                                alt={asset.name}
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-violet-500/10">
+                                {typeIcons[asset.type as keyof typeof typeIcons] ? (
+                                  (() => {
+                                    const Icon = typeIcons[asset.type as keyof typeof typeIcons]
+                                    return <Icon className="h-12 w-12 text-cyan-500/40" />
+                                  })()
+                                ) : (
+                                  <Sparkles className="h-12 w-12 text-cyan-500/40" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Overlay Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
+
+                          {/* Type Badge */}
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="secondary" className="bg-slate-950/50 backdrop-blur-md border-white/10 text-white hover:bg-slate-950/70">
+                              {asset.type}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5">
+                          <h3 className="font-semibold text-white text-lg mb-1 truncate">{asset.name}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">
+                            {asset.description || "No description provided"}
+                          </p>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={
+                                  asset.license
+                                    ? 'border-white/10 bg-white/5 text-xs text-cyan-300'
+                                    : 'border-white/10 bg-yellow-700/50 text-xs text-yellow-400'
+                                }
+                              >
+                                {asset.license ? `${Number(asset.license.price).toFixed(2)} CAMP` : 'Draft'}
+                              </Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(asset.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No Uploads Yet</h3>
-                <p className="text-muted-foreground mb-6">Start creating and uploading your content to the platform.</p>
-                <Link href="/upload">
-                  <Button className="rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-8">
-                    Upload Now
-                  </Button>
-                </Link>
-              </div>
+              ) : (
+                <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-12 backdrop-blur-md text-center">
+                  <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Uploads Yet</h3>
+                  <p className="text-muted-foreground mb-6">Start creating and uploading your content to the platform.</p>
+                  <Link href="/upload">
+                    <Button className="rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-8">
+                      Upload Now
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="licensed" className="mt-0">
-              <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-12 backdrop-blur-md text-center">
-                <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-muted-foreground" />
+              {licensedItems.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {licensedItems.map((asset) => (
+                    <Link href={`/asset/${asset.id}`} key={asset.id}>
+                      <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
+                        {/* Image */}
+                        <div className="aspect-[4/3] overflow-hidden">
+                          <div className="h-full w-full bg-slate-900">
+                            {asset.thumbnail ? (
+                              <img
+                                src={asset.thumbnail}
+                                alt={asset.name}
+                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-violet-500/10">
+                                {typeIcons[asset.type as keyof typeof typeIcons] ? (
+                                  (() => {
+                                    const Icon = typeIcons[asset.type as keyof typeof typeIcons]
+                                    return <Icon className="h-12 w-12 text-cyan-500/40" />
+                                  })()
+                                ) : (
+                                  <Sparkles className="h-12 w-12 text-cyan-500/40" />
+                                )}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Overlay Gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
+
+                          {/* Type Badge */}
+                          <div className="absolute top-3 left-3">
+                            <Badge variant="secondary" className="bg-slate-950/50 backdrop-blur-md border-white/10 text-white hover:bg-slate-950/70">
+                              {asset.type}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-5">
+                          <h3 className="font-semibold text-white text-lg mb-1 truncate">{asset.name}</h3>
+                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">
+                            {asset.description || "No description provided"}
+                          </p>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="border-white/10 bg-white/5 text-xs text-cyan-300">
+                                Licensed
+                              </Badge>
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(asset.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No Licensed Items</h3>
-                <p className="text-muted-foreground">Browse the marketplace to license content.</p>
-              </div>
+              ) : (
+                <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-12 backdrop-blur-md text-center">
+                  <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Licensed Items</h3>
+                  <p className="text-muted-foreground">Browse the marketplace to license content.</p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="activity" className="mt-0">
-              <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-12 backdrop-blur-md text-center">
-                <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
-                  <Sparkles className="h-8 w-8 text-muted-foreground" />
+              {activity.length > 0 ? (
+                <div className="space-y-4">
+                  {activity.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400">
+                          {item.transactionType === 'bought' ? <Sparkles className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-white">
+                            {item.transactionType === 'bought' ? 'Purchased Asset' : 'Uploaded Asset'}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-white">{item.amount} CAMP</p>
+                        <p className="text-xs text-muted-foreground capitalize">{item.status}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">No Activity Yet</h3>
-                <p className="text-muted-foreground">Your recent activity will appear here once you start interacting.</p>
-              </div>
+              ) : (
+                <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-12 backdrop-blur-md text-center">
+                  <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
+                    <Sparkles className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">No Activity Yet</h3>
+                  <p className="text-muted-foreground">Your recent activity will appear here once you start interacting.</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>

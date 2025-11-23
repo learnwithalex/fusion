@@ -14,22 +14,18 @@ import { Upload, FileText, ImageIcon, Music, Video, Gamepad2, Sparkles } from 'l
 import { useState, useRef, useEffect } from 'react'
 import { useAuth, useAuthState } from "@campnetwork/origin/react"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import Link from "next/link"
+import { Loader2, X } from "lucide-react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { createLicenseTerms } from "@campnetwork/origin"
+import { UploadButton } from "@/lib/uploadthing"
 
-interface Draft {
-  id: number
-  name: string
-  description: string
-  type: string
-  updatedAt: string
-}
+
 
 export default function UploadPage() {
   const auth = useAuth()
 
-  const { token } = useBackendAuth()
+  const { token, walletAddress } = useBackendAuth()
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -41,17 +37,52 @@ export default function UploadPage() {
   const [type, setType] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const [filePreview, setFilePreview] = useState<string | null>(null)
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null)
+  const [marketingVideoUrl, setMarketingVideoUrl] = useState<string | null>(null)
   const [isMinting, setIsMinting] = useState(false)
-  const [isSavingDraft, setIsSavingDraft] = useState(false)
-  const [currentDraftId, setCurrentDraftId] = useState<number | null>(null)
-  const [drafts, setDrafts] = useState<Draft[]>([])
-  const [showDrafts, setShowDrafts] = useState(false)
+  const [remixParent, setRemixParent] = useState<{ id: string, name: string, tokenId: string } | null>(null)
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (token) {
-      fetchDrafts()
+    const checkRemix = async () => {
+      const parentId = localStorage.getItem('toRemixId')
+      const parentTokenId = localStorage.getItem('toRemixTokenId')
+
+      if (parentId && parentTokenId) {
+        try {
+          const res = await fetch(`http://localhost:3001/assets/${parentId}`)
+          const data = await res.json()
+          if (data && data.name) {
+            setRemixParent({
+              id: parentId,
+              name: data.name,
+              tokenId: parentTokenId
+            })
+
+            // Check access
+            if (auth.origin && walletAddress) {
+              try {
+                const access = await auth.origin.hasAccess(
+                  walletAddress as `0x${string}`,
+                  BigInt(parentTokenId)
+                )
+                setHasAccess(access)
+              } catch (e) {
+                console.error("Failed to check access:", e)
+                setHasAccess(false)
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch remix parent:", error)
+        }
+      }
     }
-  }, [token])
+
+    if (auth.origin && walletAddress) {
+      checkRemix()
+    }
+  }, [auth.origin, walletAddress])
 
   useEffect(() => {
     if (file) {
@@ -68,15 +99,55 @@ export default function UploadPage() {
     }
   }, [file])
 
-  const fetchDrafts = async () => {
+  const handleParentTokenIdBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const tokenId = e.target.value
+    if (!tokenId) {
+      setRemixParent(null)
+      setHasAccess(null)
+      return
+    }
+
     try {
-      const res = await fetch('http://localhost:3001/assets/user/drafts', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      const res = await fetch(`http://localhost:3001/assets?tokenId=${tokenId}`)
       const data = await res.json()
-      setDrafts(data)
+      if (data && data.length > 0) {
+        const asset = data[0]
+        setRemixParent({
+          id: asset.id.toString(),
+          name: asset.name,
+          tokenId: asset.tokenId
+        })
+
+        // Check access
+        if (auth.origin && walletAddress) {
+          try {
+            const access = await auth.origin.hasAccess(
+              walletAddress as `0x${string}`,
+              BigInt(asset.tokenId)
+            )
+            setHasAccess(access)
+          } catch (e) {
+            console.error("Failed to check access:", e)
+            setHasAccess(false)
+          }
+        }
+
+        // Only set localStorage if access is confirmed? Or let them try and see the warning?
+        // User asked to "allow them paste the token id... and create the localstorage values"
+        // But also "if you dont have access... tell you to pay... or cancel"
+        // So we set it, but the UI will block if !hasAccess
+        localStorage.setItem('toRemixId', asset.id.toString())
+        localStorage.setItem('toRemixTokenId', asset.tokenId)
+      } else {
+        setRemixParent(null)
+        setHasAccess(null)
+        // Optional: clear localStorage if invalid
+        localStorage.removeItem('toRemixId')
+        localStorage.removeItem('toRemixTokenId')
+        alert("Parent Asset not found with this Token ID")
+      }
     } catch (error) {
-      console.error('Failed to fetch drafts:', error)
+      console.error("Failed to fetch parent asset:", error)
     }
   }
 
@@ -86,59 +157,7 @@ export default function UploadPage() {
     }
   }
 
-  const handleSaveDraft = async () => {
-    if (!name || !token) return
 
-    setIsSavingDraft(true)
-    try {
-      const draftData: any = {
-        name,
-        description,
-        type,
-        creationStatus: 'draft'
-      }
-
-      if (currentDraftId) {
-        // Update existing draft
-        await fetch(`http://localhost:3001/assets/${currentDraftId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(draftData)
-        })
-      } else {
-        // Create new draft
-        const res = await fetch('http://localhost:3001/assets', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(draftData)
-        })
-        const newDraft = await res.json()
-        setCurrentDraftId(newDraft.id)
-      }
-
-      await fetchDrafts()
-      alert('Draft saved successfully!')
-    } catch (error) {
-      console.error('Failed to save draft:', error)
-      alert('Failed to save draft')
-    } finally {
-      setIsSavingDraft(false)
-    }
-  }
-
-  const handleLoadDraft = (draft: Draft) => {
-    setCurrentDraftId(draft.id)
-    setName(draft.name)
-    setDescription(draft.description || '')
-    setType(draft.type)
-    setShowDrafts(false)
-  }
 
   const handleMint = async () => {
     if (!file || !name || !type || !price || !auth.origin) return
@@ -155,7 +174,13 @@ export default function UploadPage() {
 
       const tokenId = await auth.origin.mintFile(
         file,
-        { name, description, tags, type },
+        {
+          name,
+          description,
+          tags,
+          type,
+          parentId: remixParent?.tokenId
+        },
         licenseTerms
       )
 
@@ -163,13 +188,146 @@ export default function UploadPage() {
       const assetData = await auth.origin.getData(BigInt(tokenId || "0"));
       console.log("Minted Asset Data:", assetData);
 
-      // 2. Sync with Backend
-      const endpoint = currentDraftId
-        ? `http://localhost:3001/assets/${currentDraftId}`
-        : "http://localhost:3001/assets"
+      // Extract encrypted file URL from assetData
+      const encryptedFileUrl = (assetData as any)?.data?.[0]?.file?.[0] || "encrypted-url-placeholder";
+
+      // 2. Pay Protocol Fee (0.1 CAMP)
+      try {
+        if (!window.ethereum) throw new Error("No wallet found");
+        if (!walletAddress) throw new Error("User not authenticated");
+
+        // Find the correct provider for the address
+        let provider = window.ethereum as any;
+        let targetAccount: string | undefined;
+
+        if (provider.providers) {
+          // Check multiple injected providers
+          for (const p of provider.providers) {
+            try {
+              const accounts = await p.request({ method: 'eth_accounts' });
+              if (accounts.some((a: string) => a.toLowerCase() === walletAddress.toLowerCase())) {
+                provider = p;
+                targetAccount = accounts.find((a: string) => a.toLowerCase() === walletAddress.toLowerCase());
+                break;
+              }
+            } catch (e) {
+              console.warn("Error checking provider:", e);
+            }
+          }
+        }
+
+        // Fallback to checking the main provider if not found in sub-providers
+        if (!targetAccount) {
+          try {
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            targetAccount = accounts.find((acc: string) => acc.toLowerCase() === walletAddress.toLowerCase());
+          } catch (e) {
+            console.warn("Error requesting accounts from main provider:", e);
+          }
+        }
+
+        if (!targetAccount) {
+          throw new Error(`Please ensure wallet ${walletAddress} is active and connected.`);
+        }
+
+        const transactionParameters = {
+          to: '0xa257a6ecbb64f869c97a8239007f86d2cc676fee', // TODO: Replace with real fee recipient
+          from: targetAccount,
+          value: '0x2386F26FC10000', // 0.01 CAMP in wei (10000000000000000)
+        };
+
+        const txHash = await provider.request({
+          method: 'eth_sendTransaction',
+          params: [transactionParameters],
+        });
+
+        console.log("Fee transaction sent:", txHash);
+
+        // Wait for receipt
+        let receipt = null;
+        while (receipt === null) {
+          receipt = await provider.request({
+            method: 'eth_getTransactionReceipt',
+            params: [txHash],
+          });
+          if (receipt === null) await new Promise(r => setTimeout(r, 1000));
+        }
+        console.log("Fee transaction confirmed:", receipt);
+
+      } catch (error) {
+        console.error("Protocol fee payment failed:", error);
+        alert("Protocol fee payment failed. Please try again.");
+        setIsMinting(false);
+      }
+
+      // 3. Sign Verification Payload
+      let signature = "";
+      let verificationPayload = {
+        walletAddress: walletAddress,
+        tokenId: tokenId,
+        parentId: remixParent?.tokenId || null,
+        expiry: Date.now() + 5 * 60 * 1000 // 5 minutes
+      };
+
+      try {
+        if (!window.ethereum) throw new Error("No wallet found");
+        if (!walletAddress) throw new Error("User not authenticated");
+
+        // Find the correct provider for the address
+        let provider = window.ethereum as any;
+        let targetAccount: string | undefined;
+
+        if (provider.providers) {
+          // Check multiple injected providers
+          for (const p of provider.providers) {
+            try {
+              const accounts = await p.request({ method: 'eth_accounts' });
+              if (accounts.some((a: string) => a.toLowerCase() === walletAddress.toLowerCase())) {
+                provider = p;
+                targetAccount = accounts.find((a: string) => a.toLowerCase() === walletAddress.toLowerCase());
+                break;
+              }
+            } catch (e) {
+              console.warn("Error checking provider:", e);
+            }
+          }
+        }
+
+        // Fallback to checking the main provider if not found in sub-providers
+        if (!targetAccount) {
+          try {
+            const accounts = await provider.request({ method: 'eth_requestAccounts' });
+            targetAccount = accounts.find((acc: string) => acc.toLowerCase() === walletAddress.toLowerCase());
+          } catch (e) {
+            console.warn("Error requesting accounts from main provider:", e);
+          }
+        }
+
+        if (!targetAccount) {
+          throw new Error(`Please ensure wallet ${walletAddress} is active and connected.`);
+        }
+
+        const message = JSON.stringify(verificationPayload);
+
+        // Use personal_sign
+        signature = await provider.request({
+          method: 'personal_sign',
+          params: [message, targetAccount],
+        });
+
+        console.log("Signature generated:", signature);
+      } catch (error) {
+        console.error("Signing failed:", error);
+        alert("Failed to sign verification message. Upload cancelled.");
+        setIsMinting(false);
+        return;
+      }
+
+      // 4. Sync with Backend
+      const endpoint = "http://localhost:3001/assets"
 
       await fetch(endpoint, {
-        method: currentDraftId ? "PUT" : "POST",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
@@ -178,19 +336,29 @@ export default function UploadPage() {
           name,
           description,
           type,
-          file: (assetData as any)?.uri || "encrypted-url-placeholder",
-          metadata: { size: file.size.toString(), type: file.type },
+          file: encryptedFileUrl,
+          thumbnail: thumbnailUrl,
+          video: marketingVideoUrl,
+          metadata: { size: file.size.toString(), fileType: file.type },
           license: {
             price: parseFloat(price),
             royalty: royalty[0],
             duration: "30 days"
           },
+          tags,
           tokenId,
-          creationStatus: "live"
+          creationStatus: "live",
+          parentId: remixParent?.id ? parseInt(remixParent.id) : undefined,
+          signature,
+          verificationPayload
         })
       })
 
-      router.push("/dashboard")
+      // Clear remix data
+      localStorage.removeItem('toRemixId')
+      localStorage.removeItem('toRemixTokenId')
+
+      router.push("/profile")
     } catch (error) {
       console.error("Minting failed:", error)
     } finally {
@@ -205,6 +373,22 @@ export default function UploadPage() {
 
       <main className="ml-20 px-8 py-8">
         <div className="mx-auto max-w-[1200px]">
+          {remixParent && (
+            <div className="mb-8 rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4 backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-400">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-cyan-100">Remixing Derivative Work</h3>
+                  <p className="text-sm text-cyan-200/60">
+                    You are creating a derivative of <span className="font-medium text-cyan-100">{remixParent.name}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-2">Upload & Mint IP Asset</h1>
@@ -242,6 +426,81 @@ export default function UploadPage() {
                   </p>
                 </div>
               </Card>
+
+              {/* Thumbnail & Marketing Video */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+                  <h2 className="text-xl font-semibold mb-4">Thumbnail</h2>
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    {thumbnailUrl ? (
+                      <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border/20">
+                        <img src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2 h-6 w-6 p-0 rounded-full"
+                          onClick={() => setThumbnailUrl(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-full aspect-video rounded-lg bg-muted/20 flex items-center justify-center border-2 border-dashed border-border/20">
+                        <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
+                      </div>
+                    )}
+                    <UploadButton
+                      endpoint="thumbnailUploader"
+                      onClientUploadComplete={(res: any) => {
+                        if (res && res[0]) setThumbnailUrl(res[0].url)
+                      }}
+                      onUploadError={(error: Error) => {
+                        alert(`ERROR! ${error.message}`)
+                      }}
+                      appearance={{
+                        button: "bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full",
+                        allowedContent: "text-xs text-muted-foreground mt-1"
+                      }}
+                    />
+                  </div>
+                </Card>
+
+                <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+                  <h2 className="text-xl font-semibold mb-4">Marketing Video</h2>
+                  <div className="flex flex-col items-center justify-center gap-4">
+                    {marketingVideoUrl ? (
+                      <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border/20 bg-black">
+                        <video src={marketingVideoUrl} controls className="w-full h-full" />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2 h-6 w-6 p-0 rounded-full z-10"
+                          onClick={() => setMarketingVideoUrl(null)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="w-full aspect-video rounded-lg bg-muted/20 flex items-center justify-center border-2 border-dashed border-border/20">
+                        <Video className="h-8 w-8 text-muted-foreground mb-2" />
+                      </div>
+                    )}
+                    <UploadButton
+                      endpoint="videoUploader"
+                      onClientUploadComplete={(res: any) => {
+                        if (res && res[0]) setMarketingVideoUrl(res[0].url)
+                      }}
+                      onUploadError={(error: Error) => {
+                        alert(`ERROR! ${error.message}`)
+                      }}
+                      appearance={{
+                        button: "bg-purple-500 hover:bg-purple-600 text-white text-sm px-4 py-2 rounded-full",
+                        allowedContent: "text-xs text-muted-foreground mt-1"
+                      }}
+                    />
+                  </div>
+                </Card>
+              </div>
 
               {/* Metadata */}
               <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
@@ -358,9 +617,6 @@ export default function UploadPage() {
                       <SelectContent>
                         <SelectItem value="7">7 days</SelectItem>
                         <SelectItem value="30">30 days</SelectItem>
-                        <SelectItem value="90">90 days</SelectItem>
-                        <SelectItem value="365">1 year</SelectItem>
-                        <SelectItem value="unlimited">Unlimited</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -370,21 +626,72 @@ export default function UploadPage() {
               </Card>
 
               {/* Parent IP (Optional) */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
-                <h2 className="text-xl font-semibold mb-2">Parent IP (Optional)</h2>
+              {/* Parent IP (Optional) */}
+              <Card className={`rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm ${remixParent ? 'border-yellow-500/20 bg-yellow-500/5' : ''}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-semibold">Parent IP</h2>
+                  {remixParent && <span className="text-xs font-mono text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded bg-yellow-500/10">REQUIRED FOR DERIVATIVES</span>}
+                </div>
+
                 <p className="text-sm text-muted-foreground mb-4">
-                  If this is a derivative work, select the parent IP asset
+                  If this is a derivative work, you <span className="text-yellow-400 font-medium">MUST</span> specify the parent IP asset. Failure to do so may result in your IP being deleted.
                 </p>
-                <Select>
-                  <SelectTrigger className="bg-muted/30 border-border/20">
-                    <SelectValue placeholder="Select parent IP or leave blank" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None - Original Work</SelectItem>
-                    <SelectItem value="1234">Neon Dreams Beat (#1234)</SelectItem>
-                    <SelectItem value="1235">Cyber Punk Art (#1235)</SelectItem>
-                  </SelectContent>
-                </Select>
+
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="parentTokenId">Parent Token ID</Label>
+                    <Input
+                      id="parentTokenId"
+                      placeholder="Enter Token ID (e.g. 1234)"
+                      className="mt-2 bg-muted/30 border-border/20"
+                      defaultValue={remixParent?.tokenId || ""}
+                      onBlur={handleParentTokenIdBlur}
+                      disabled={!!localStorage.getItem('toRemixId')} // Disable if loaded from storage (as per "just take the name value automatically")
+                    />
+                  </div>
+
+                  {remixParent && (
+                    <div className="rounded-lg border border-border/10 bg-black/20 p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                            <Sparkles className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">{remixParent.name}</p>
+                            <p className="text-xs text-muted-foreground">Token ID: {remixParent.tokenId}</p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-red-500/20 hover:text-red-400"
+                          onClick={() => {
+                            setRemixParent(null)
+                            setHasAccess(null)
+                            localStorage.removeItem('toRemixId')
+                            localStorage.removeItem('toRemixTokenId')
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {hasAccess === false && (
+                        <div className="mt-2 rounded bg-red-500/10 p-3 border border-red-500/20">
+                          <p className="text-sm text-red-200 mb-2">
+                            You must own a license to remix this asset.
+                          </p>
+                          <Link href={`/asset/${remixParent.id}`}>
+                            <Button size="sm" variant="destructive" className="w-full">
+                              Buy Access
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </Card>
             </div>
 
@@ -394,7 +701,9 @@ export default function UploadPage() {
                 <h2 className="text-xl font-semibold mb-4">Preview</h2>
 
                 <div className="mb-6 aspect-square rounded-xl bg-muted/20 flex items-center justify-center overflow-hidden">
-                  {filePreview ? (
+                  {thumbnailUrl ? (
+                    <img src={thumbnailUrl} alt="Preview" className="w-full h-full object-cover" />
+                  ) : filePreview ? (
                     <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <FileText className="h-16 w-16 text-muted-foreground" />
@@ -416,56 +725,24 @@ export default function UploadPage() {
                     <span className="text-muted-foreground">Type</span>
                     <span className="font-semibold">{type || "Not selected"}</span>
                   </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Protocol Fee</span>
+                    <span className="font-semibold text-orange-400">0.1 CAMP</span>
+                  </div>
                 </div>
 
                 <Separator className="my-6 bg-border/10" />
 
                 <div className="space-y-3">
                   <Button
-                    className="w-full gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="w-full gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
                     size="lg"
                     onClick={handleMint}
-                    disabled={isMinting || !file || !name || !price}
+                    disabled={isMinting || !file || !name || !price || (!!remixParent && hasAccess === false)}
                   >
-                    {isMinting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    {isMinting ? "Minting..." : "Mint with Camp Origin"}
+                    {isMinting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {isMinting ? "Minting..." : "Mint Asset"}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full rounded-full border-border/20"
-                    size="lg"
-                    onClick={handleSaveDraft}
-                    disabled={isSavingDraft || !name}
-                  >
-                    {isSavingDraft ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    {currentDraftId ? 'Update Draft' : 'Save as Draft'}
-                  </Button>
-                  {drafts.length > 0 && (
-                    <Button
-                      variant="ghost"
-                      className="w-full rounded-full"
-                      size="lg"
-                      onClick={() => setShowDrafts(!showDrafts)}
-                    >
-                      {showDrafts ? 'Hide' : 'Load'} Drafts ({drafts.length})
-                    </Button>
-                  )}
-                  {showDrafts && (
-                    <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-                      {drafts.map(draft => (
-                        <button
-                          key={draft.id}
-                          onClick={() => handleLoadDraft(draft)}
-                          className="w-full text-left p-3 rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors"
-                        >
-                          <div className="font-medium text-sm">{draft.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {draft.type} • {new Date(draft.updatedAt).toLocaleDateString()}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 <div className="mt-6 rounded-lg bg-blue-500/5 border border-blue-500/10 p-4">
