@@ -8,6 +8,13 @@
       "when": 1763683178841,
       "tag": "0000_first_the_watchers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763917673589,
+      "tag": "0001_awesome_mad_thinker",
+      "breakpoints": true
     }
   ]
 }

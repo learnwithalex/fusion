@@ -6,7 +6,9 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Music, ImageIcon, Video, Gamepad2, Clock, Shield, Coins, Calendar, FileText, Hash, User, TrendingUp, Copy, ExternalLink, GitFork, Download } from 'lucide-react'
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Music, ImageIcon, Video, Gamepad2, Clock, Shield, Coins, Calendar, FileText, Hash, User, TrendingUp, Copy, ExternalLink, GitFork, Download, Gavel } from 'lucide-react'
 
 import { useState, useEffect } from 'react'
 import { useAuth, useAuthState } from "@campnetwork/origin/react"
@@ -75,6 +77,29 @@ interface Asset {
     id: number
     name: string
   }
+  // Bidding fields
+  biddingEnabled?: boolean
+  biddingStartPrice?: string
+  biddingDuration?: number
+  biddingStartedAt?: string
+  biddingEndsAt?: string
+  biddingWinnerId?: number
+  biddingStatus?: string
+}
+
+interface Bid {
+  bid: {
+    id: number
+    amount: string
+    tnxhash: string | null
+    status: string
+    createdAt: string
+  }
+  user: {
+    id: number
+    name: string | null
+    walletAddress: string
+  } | null
 }
 
 const typeIcons = {
@@ -98,6 +123,12 @@ export default function AssetDetailPage() {
   const [isBuying, setIsBuying] = useState(false)
   const [owner, setOwner] = useState("")
   const [copied, setCopied] = useState(false)
+
+  // Bidding state
+  const [bids, setBids] = useState<Bid[]>([])
+  const [bidAmount, setBidAmount] = useState("")
+  const [isPlacingBid, setIsPlacingBid] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -117,6 +148,62 @@ export default function AssetDetailPage() {
 
     if (id) fetchAsset()
   }, [id])
+
+  // Fetch bids if bidding is enabled
+  useEffect(() => {
+    const fetchBids = async () => {
+      if (!asset?.biddingEnabled) return
+
+      try {
+        const res = await fetch(`http://localhost:3001/assets/${id}/bids`)
+        if (res.ok) {
+          const data = await res.json()
+          setBids(data)
+        }
+      } catch (error) {
+        console.error("Failed to fetch bids:", error)
+      }
+    }
+
+    if (asset) fetchBids()
+  }, [asset, id])
+
+  // Update countdown timer
+  useEffect(() => {
+    if (!asset?.biddingEnabled || asset.biddingStatus !== 'active' || !asset.biddingEndsAt) {
+      setTimeRemaining(null)
+      return
+    }
+
+    const updateTimer = () => {
+      const now = new Date().getTime()
+      const end = new Date(asset.biddingEndsAt!).getTime()
+      const distance = end - now
+
+      if (distance < 0) {
+        setTimeRemaining("Auction ended")
+        return
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+      if (days > 0) {
+        setTimeRemaining(`${days}d ${hours}h ${minutes}m`)
+      } else if (hours > 0) {
+        setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`)
+      } else {
+        setTimeRemaining(`${minutes}m ${seconds}s`)
+      }
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+
+    return () => clearInterval(interval)
+  }, [asset])
 
   useEffect(() => {
     const checkAccess = async () => {
@@ -195,6 +282,104 @@ export default function AssetDetailPage() {
       console.error("Purchase failed:", error)
     } finally {
       setIsBuying(false)
+    }
+  }
+
+  const handlePlaceBid = async () => {
+    if (!asset || !walletAddress || !auth.origin || !bidAmount) return
+
+    setIsPlacingBid(true)
+    try {
+      // 1. Validate bid amount
+      const currentHighestBid = bids.length > 0 ? parseFloat(bids[0].bid.amount) : parseFloat(asset.biddingStartPrice || "0")
+      const minBid = bids.length > 0 ? currentHighestBid + 0.01 : currentHighestBid
+
+      if (parseFloat(bidAmount) < minBid) {
+        alert(`Bid must be at least ${minBid} CAMP`)
+        return
+      }
+
+      // 2. Find correct provider (multi-provider support)
+      let provider = window.ethereum as any
+      let targetAccount: string | undefined
+
+      if (provider.providers) {
+        for (const p of provider.providers) {
+          try {
+            const accounts = await p.request({ method: 'eth_accounts' })
+            if (accounts.some((a: string) => a.toLowerCase() === walletAddress.toLowerCase())) {
+              provider = p
+              targetAccount = accounts.find((a: string) => a.toLowerCase() === walletAddress.toLowerCase())
+              break
+            }
+          } catch (e) {
+            console.warn("Error checking provider:", e)
+          }
+        }
+      }
+
+      if (!targetAccount) {
+        try {
+          const accounts = await provider.request({ method: 'eth_requestAccounts' })
+          targetAccount = accounts.find((acc: string) => acc.toLowerCase() === walletAddress.toLowerCase())
+        } catch (e) {
+          console.warn("Error requesting accounts:", e)
+        }
+      }
+
+      if (!targetAccount) {
+        throw new Error(`Please ensure wallet ${walletAddress} is active and connected.`)
+      }
+
+      // 3. Send payment to creator
+      const amountInWei = `0x${(parseFloat(bidAmount) * 1e18).toString(16)}`
+
+      const txHash = await provider.request({
+        method: 'eth_sendTransaction',
+        params: [{
+          from: targetAccount,
+          to: asset.creator.walletAddress,
+          value: amountInWei,
+        }],
+      })
+
+      // 4. Submit bid to backend
+      const res = await fetch(`http://localhost:3001/assets/${id}/bid`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          amount: bidAmount,
+          tnxhash: txHash
+        })
+      })
+
+      if (res.ok) {
+        alert("Bid placed successfully!")
+        // Refresh bids
+        const bidsRes = await fetch(`http://localhost:3001/assets/${id}/bids`)
+        if (bidsRes.ok) {
+          const bidsData = await bidsRes.json()
+          setBids(bidsData)
+        }
+        // Refresh asset to get updated status
+        const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
+        if (assetRes.ok) {
+          const assetData = await assetRes.json()
+          setAsset(assetData)
+        }
+        setBidAmount("")
+      } else {
+        const error = await res.json()
+        alert(`Failed to place bid: ${error.error}`)
+      }
+    } catch (error) {
+      console.error("Bid placement failed:", error)
+      alert("Failed to place bid. Please try again.")
+    } finally {
+      setIsPlacingBid(false)
     }
   }
 
@@ -470,6 +655,102 @@ export default function AssetDetailPage() {
                       <Download className="h-4 w-4" />
                       Download Asset
                     </Button>
+                  ) : asset.biddingEnabled ? (
+                    // Bidding UI
+                    <div className="space-y-4">
+                      {/* Auction Status Badge */}
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Auction Status</p>
+                          <p className="text-lg font-semibold text-yellow-400">
+                            {asset.biddingStatus === 'pending' && 'Awaiting First Bid'}
+                            {asset.biddingStatus === 'active' && 'Live Auction'}
+                            {asset.biddingStatus === 'ended' && 'Auction Ended'}
+                            {asset.biddingStatus === 'completed' && 'Completed'}
+                          </p>
+                        </div>
+                        {timeRemaining && asset.biddingStatus === 'active' && (
+                          <div className="text-right">
+                            <p className="text-sm text-muted-foreground">Time Remaining</p>
+                            <p className="text-lg font-bold text-cyan-400">{timeRemaining}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Current Bid / Starting Price */}
+                      <div className="p-4 rounded-lg bg-card/30 border border-border/20">
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {bids.length > 0 ? 'Current Highest Bid' : 'Starting Bid'}
+                        </p>
+                        <p className="text-2xl font-bold text-white">
+                          {bids.length > 0 ? bids[0].bid.amount : asset.biddingStartPrice} CAMP
+                        </p>
+                        {bids.length > 0 && bids[0].user && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            by {bids[0].user.name || bids[0].user.walletAddress.slice(0, 6) + '...' + bids[0].user.walletAddress.slice(-4)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Place Bid (if auction is active or pending) */}
+                      {(asset.biddingStatus === 'pending' || asset.biddingStatus === 'active') && (
+                        <div className="space-y-2">
+                          <Label htmlFor="bid-amount">Your Bid (CAMP)</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="bid-amount"
+                              type="number"
+                              step="0.01"
+                              placeholder={`Min: ${bids.length > 0 ? (parseFloat(bids[0].bid.amount) + 0.01).toFixed(2) : asset.biddingStartPrice}`}
+                              value={bidAmount}
+                              onChange={(e) => setBidAmount(e.target.value)}
+                              className="bg-muted/30 border-border/20"
+                            />
+                            <Button
+                              onClick={handlePlaceBid}
+                              disabled={isPlacingBid || !bidAmount || (bids.length > 0 && bids[0].user?.walletAddress.toLowerCase() === walletAddress?.toLowerCase())}
+                              className="gap-2 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+                            >
+                              {isPlacingBid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gavel className="h-4 w-4" />}
+                              Place Bid
+                            </Button>
+                          </div>
+                          {bids.length > 0 && bids[0].user?.walletAddress.toLowerCase() === walletAddress?.toLowerCase() && (
+                            <p className="text-xs text-yellow-400">You are the current highest bidder</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bid History */}
+                      {bids.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-semibold">Bid History</h4>
+                          <div className="max-h-48 overflow-y-auto space-y-2">
+                            {bids.map((bid, idx) => (
+                              <div key={bid.bid.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/10">
+                                <div>
+                                  <p className="text-sm font-medium">{bid.bid.amount} CAMP</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {bid.user?.name || bid.user?.walletAddress.slice(0, 6) + '...' + bid.user?.walletAddress.slice(-4)}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-muted-foreground">
+                                    {new Date(bid.bid.createdAt).toLocaleString()}
+                                  </p>
+                                  {idx === 0 && bid.bid.status === 'active' && (
+                                    <span className="text-xs text-green-400">Leading</span>
+                                  )}
+                                  {bid.bid.status === 'outbid' && (
+                                    <span className="text-xs text-red-400">Outbid</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <Button
                       className="w-full gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"

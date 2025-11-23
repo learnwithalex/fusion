@@ -43,6 +43,11 @@ export default function UploadPage() {
   const [remixParent, setRemixParent] = useState<{ id: string, name: string, tokenId: string } | null>(null)
   const [hasAccess, setHasAccess] = useState<boolean | null>(null)
 
+  // Bidding state
+  const [biddingEnabled, setBiddingEnabled] = useState(false)
+  const [biddingStartPrice, setBiddingStartPrice] = useState("")
+  const [biddingDuration, setBiddingDuration] = useState("24") // hours
+
   useEffect(() => {
     const checkRemix = async () => {
       const parentId = localStorage.getItem('toRemixId')
@@ -350,7 +355,11 @@ export default function UploadPage() {
           creationStatus: "live",
           parentId: remixParent?.id ? parseInt(remixParent.id) : undefined,
           signature,
-          verificationPayload
+          verificationPayload,
+          // Bidding fields
+          biddingEnabled,
+          biddingStartPrice: biddingEnabled ? parseFloat(biddingStartPrice) : undefined,
+          biddingDuration: biddingEnabled ? parseInt(biddingDuration) * 3600 : undefined // Convert hours to seconds
         })
       })
 
@@ -622,6 +631,74 @@ export default function UploadPage() {
                   </div>
 
 
+                </div>
+              </Card>
+
+              {/* Bidding Options */}
+              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+                <h2 className="text-xl font-semibold mb-4">Auction Settings</h2>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label htmlFor="bidding-enabled">Enable Auction</Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        List this asset for auction instead of fixed price
+                      </p>
+                    </div>
+                    <input
+                      id="bidding-enabled"
+                      type="checkbox"
+                      checked={biddingEnabled}
+                      onChange={(e) => setBiddingEnabled(e.target.checked)}
+                      className="w-5 h-5 rounded border-border/20 bg-muted/30"
+                    />
+                  </div>
+
+                  {biddingEnabled && (
+                    <>
+                      <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-sm text-yellow-200">
+                          ⚠️ By enabling auction, the asset will be held by the protocol until the auction completes.
+                          The highest bidder wins when the time expires.
+                        </p>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="bidding-start-price">Starting Bid (CAMP)</Label>
+                        <Input
+                          id="bidding-start-price"
+                          type="number"
+                          step="0.01"
+                          placeholder="1.0"
+                          value={biddingStartPrice}
+                          onChange={(e) => setBiddingStartPrice(e.target.value)}
+                          className="mt-2 bg-muted/30 border-border/20"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="bidding-duration">Auction Duration (after first bid)</Label>
+                        <Select value={biddingDuration} onValueChange={setBiddingDuration}>
+                          <SelectTrigger className="mt-2 bg-muted/30 border-border/20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 hour</SelectItem>
+                            <SelectItem value="6">6 hours</SelectItem>
+                            <SelectItem value="12">12 hours</SelectItem>
+                            <SelectItem value="24">24 hours</SelectItem>
+                            <SelectItem value="48">48 hours</SelectItem>
+                            <SelectItem value="72">72 hours</SelectItem>
+                            <SelectItem value="168">7 days</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Auction starts when the first bid is placed and ends after this duration
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </Card>
 

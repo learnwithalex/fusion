@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { assets, licenses, transactions, assetFiles, assetMetadata, users } from "../db/schema";
+import { assets, licenses, transactions, assetFiles, assetMetadata, users, bids } from "../db/schema";
 import { eq, like, and, gte, lte, desc, sql, inArray } from "drizzle-orm";
 
 const router = Router();
@@ -91,7 +91,7 @@ const publicClient = createPublicClient({
 
 // Create Asset (Mint)
 router.post("/", authenticate, async (req, res) => {
-    const { name, description, type, file, metadata, license, tags, parentId, tokenId, creationStatus, thumbnail, video, signature, verificationPayload } = req.body;
+    const { name, description, type, file, metadata, license, tags, parentId, tokenId, creationStatus, thumbnail, video, signature, verificationPayload, biddingEnabled, biddingStartPrice, biddingDuration } = req.body;
     const userId = req.user!.id; // Guaranteed by middleware
 
     try {
@@ -163,12 +163,17 @@ router.post("/", authenticate, async (req, res) => {
             type,
             remixOf: parentId || null,
             isRemixed: !!parentId,
-            assetStatus: "new",
+            assetStatus: biddingEnabled ? "auction" : "new",
             creationStatus: creationStatus || "live", // Support draft or live
             tokenId: tokenId || null,
             tags,
             thumbnail,
-            video
+            video,
+            // Bidding fields
+            biddingEnabled: biddingEnabled || false,
+            biddingStartPrice: biddingStartPrice || null,
+            biddingDuration: biddingDuration || null,
+            biddingStatus: biddingEnabled ? "pending" : null
         }).returning();
 
 
@@ -480,6 +485,198 @@ router.post("/:id/remix", async (req, res) => {
     // For now, redirecting to POST / logic on client side is common, 
     // but here we can just handle the specific remix tracking.
     res.status(501).json({ error: "Use POST / with parentId to remix" });
+});
+
+// ============ Bidding Routes ============
+
+// Get bids for an asset
+router.get("/:id/bids", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const assetBids = await db.select({
+            bid: bids,
+            user: {
+                id: users.id,
+                name: users.name,
+                walletAddress: users.walletAddress
+            }
+        })
+            .from(bids)
+            .leftJoin(users, eq(bids.userId, users.id))
+            .where(eq(bids.assetId, parseInt(id)))
+            .orderBy(desc(bids.amount));
+
+        res.json(assetBids);
+    } catch (error) {
+        console.error("Error fetching bids:", error);
+        res.status(500).json({ error: "Failed to fetch bids" });
+    }
+});
+
+// Place a bid
+router.post("/:id/bid", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { amount, tnxhash } = req.body;
+    const userId = req.user!.id;
+
+    if (!tnxhash) {
+        return res.status(400).json({ error: "Transaction hash required" });
+    }
+
+    try {
+        // 1. Verify transaction on-chain (similar to buy verification)
+        const receipt = await publicClient.getTransactionReceipt({ hash: tnxhash as any });
+
+        if (receipt.status !== 'success') {
+            return res.status(400).json({ error: "Transaction failed on chain" });
+        }
+
+        // 2. Get asset and verify bidding is enabled
+        const asset = await db.select().from(assets).where(eq(assets.id, parseInt(id)));
+        if (!asset[0]) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+
+        if (!asset[0].biddingEnabled) {
+            return res.status(400).json({ error: "Bidding not enabled for this asset" });
+        }
+
+        // 3. Check bidding status
+        if (asset[0].biddingStatus === 'completed') {
+            return res.status(400).json({ error: "Auction has ended" });
+        }
+
+        // If auction is active, check if it has ended
+        if (asset[0].biddingStatus === 'active' && asset[0].biddingEndsAt) {
+            if (new Date() >= asset[0].biddingEndsAt) {
+                return res.status(400).json({ error: "Auction has ended" });
+            }
+        }
+
+        // 4. Verify bid amount
+        const currentHighestBid = await db.select()
+            .from(bids)
+            .where(and(eq(bids.assetId, parseInt(id)), eq(bids.status, 'active')))
+            .orderBy(desc(bids.amount))
+            .limit(1);
+
+        const minBid = currentHighestBid[0]
+            ? parseFloat(currentHighestBid[0].amount) + 0.01
+            : parseFloat(asset[0].biddingStartPrice || "0");
+
+        if (parseFloat(amount) < minBid) {
+            return res.status(400).json({ error: `Bid must be at least ${minBid} CAMP` });
+        }
+
+        // 5. If first bid, start the auction
+        if (asset[0].biddingStatus === 'pending') {
+            const startedAt = new Date();
+            const endsAt = new Date(startedAt.getTime() + (asset[0].biddingDuration! * 1000));
+
+            await db.update(assets)
+                .set({
+                    biddingStatus: 'active',
+                    biddingStartedAt: startedAt,
+                    biddingEndsAt: endsAt
+                })
+                .where(eq(assets.id, parseInt(id)));
+        }
+
+        // 6. Mark previous highest bid as outbid
+        if (currentHighestBid[0]) {
+            await db.update(bids)
+                .set({ status: 'outbid' })
+                .where(eq(bids.id, currentHighestBid[0].id));
+        }
+
+        // 7. Insert new bid
+        await db.insert(bids).values({
+            assetId: parseInt(id),
+            userId,
+            amount,
+            tnxhash,
+            status: 'active'
+        });
+
+        res.json({ success: true, message: "Bid placed successfully" });
+    } catch (error) {
+        console.error("Bid placement error:", error);
+        res.status(500).json({ error: "Failed to place bid" });
+    }
+});
+
+// Finalize auction (can be called by anyone after auction ends)
+router.post("/:id/finalize-auction", async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // 1. Get asset
+        const asset = await db.select().from(assets).where(eq(assets.id, parseInt(id)));
+        if (!asset[0]) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+
+        // 2. Verify auction has ended
+        if (asset[0].biddingStatus !== 'active') {
+            return res.status(400).json({ error: "Auction is not active" });
+        }
+
+        if (!asset[0].biddingEndsAt || new Date() < asset[0].biddingEndsAt) {
+            return res.status(400).json({ error: "Auction has not ended yet" });
+        }
+
+        // 3. Get winning bid
+        const winningBid = await db.select({
+            bid: bids,
+            user: users
+        })
+            .from(bids)
+            .leftJoin(users, eq(bids.userId, users.id))
+            .where(and(eq(bids.assetId, parseInt(id)), eq(bids.status, 'active')))
+            .orderBy(desc(bids.amount))
+            .limit(1);
+
+        if (!winningBid[0]) {
+            return res.status(400).json({ error: "No bids found" });
+        }
+
+        // 4. Update asset
+        await db.update(assets)
+            .set({
+                biddingStatus: 'completed',
+                biddingWinnerId: winningBid[0].user!.id
+            })
+            .where(eq(assets.id, parseInt(id)));
+
+        // 5. Update winning bid
+        await db.update(bids)
+            .set({ status: 'won' })
+            .where(eq(bids.id, winningBid[0].bid.id));
+
+        // 6. Record transaction
+        await db.insert(transactions).values({
+            userId: winningBid[0].user!.id,
+            assetId: parseInt(id),
+            transactionType: 'bought',
+            amount: winningBid[0].bid.amount,
+            tnxhash: winningBid[0].bid.tnxhash || '',
+            status: 'success'
+        });
+
+        res.json({
+            success: true,
+            winner: {
+                id: winningBid[0].user!.id,
+                name: winningBid[0].user!.name,
+                walletAddress: winningBid[0].user!.walletAddress
+            },
+            winningBid: winningBid[0].bid.amount
+        });
+    } catch (error) {
+        console.error("Auction finalization error:", error);
+        res.status(500).json({ error: "Failed to finalize auction" });
+    }
 });
 
 export default router;

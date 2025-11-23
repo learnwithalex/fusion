@@ -50,6 +50,14 @@ export const assets = pgTable("assets", {
     creationStatus: text("creation_status").default("draft"), // draft, live
     assetStatus: text("asset_status").default("new"), // buy now, auction, new
     tokenId: text("token_id"),
+    // Bidding fields
+    biddingEnabled: boolean("bidding_enabled").default(false),
+    biddingStartPrice: decimal("bidding_start_price", { precision: 18, scale: 8 }),
+    biddingDuration: integer("bidding_duration"), // Duration in seconds after first bid
+    biddingStartedAt: timestamp("bidding_started_at"),
+    biddingEndsAt: timestamp("bidding_ends_at"),
+    biddingWinnerId: integer("bidding_winner_id").references(() => users.id),
+    biddingStatus: text("bidding_status").default("pending"), // pending, active, ended, completed
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -93,6 +101,16 @@ export const transactions = pgTable("transactions", {
     status: text("status").default("pending"), // pending, success, failed
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const bids = pgTable("bids", {
+    id: serial("id").primaryKey(),
+    assetId: integer("asset_id").references(() => assets.id).notNull(),
+    userId: integer("user_id").references(() => users.id).notNull(),
+    amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
+    tnxhash: text("tnxhash"),
+    status: text("status").default("active"), // active, outbid, won, cancelled
+    createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Relations
