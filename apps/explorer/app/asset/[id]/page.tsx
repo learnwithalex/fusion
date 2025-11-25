@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Music, ImageIcon, Video, Gamepad2, Clock, Shield, Coins, Calendar, FileText, Hash, User, TrendingUp, Copy, ExternalLink, GitFork, Download, Gavel } from 'lucide-react'
+import { Music, ImageIcon, Video, Gamepad2, Clock, Shield, Coins, Calendar, FileText, Hash, User, TrendingUp, Copy, ExternalLink, GitFork, Download, Gavel, Trophy, Trash2 } from 'lucide-react'
 
 import { useState, useEffect } from 'react'
 import { useAuth, useAuthState } from "@campnetwork/origin/react"
@@ -85,6 +85,8 @@ interface Asset {
   biddingEndsAt?: string
   biddingWinnerId?: number
   biddingStatus?: string
+  ownershipAccepted?: boolean
+  deletionRequested?: boolean
 }
 
 interface Bid {
@@ -129,6 +131,11 @@ export default function AssetDetailPage() {
   const [bidAmount, setBidAmount] = useState("")
   const [isPlacingBid, setIsPlacingBid] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null)
+  const [isAcceptingOwnership, setIsAcceptingOwnership] = useState(false)
+  const [isRequestingDeletion, setIsRequestingDeletion] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null)
+  const [isClaimingRefund, setIsClaimingRefund] = useState(false)
+  const [userHasOutbidBid, setUserHasOutbidBid] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -149,6 +156,27 @@ export default function AssetDetailPage() {
     if (id) fetchAsset()
   }, [id])
 
+  // Fetch current user ID
+  useEffect(() => {
+    const fetchUserId = async () => {
+      if (!token) return
+
+      try {
+        const res = await fetch('http://localhost:3001/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setCurrentUserId(data.id)
+        }
+      } catch (error) {
+        console.error('Failed to fetch user ID:', error)
+      }
+    }
+
+    fetchUserId()
+  }, [token])
+
   // Fetch bids if bidding is enabled
   useEffect(() => {
     const fetchBids = async () => {
@@ -159,6 +187,14 @@ export default function AssetDetailPage() {
         if (res.ok) {
           const data = await res.json()
           setBids(data)
+
+          // Check if current user has outbid bids
+          if (currentUserId) {
+            const hasOutbid = data.some((b: Bid) =>
+              b.user?.id === currentUserId && b.bid.status === 'outbid'
+            )
+            setUserHasOutbidBid(hasOutbid)
+          }
         }
       } catch (error) {
         console.error("Failed to fetch bids:", error)
@@ -331,15 +367,26 @@ export default function AssetDetailPage() {
         throw new Error(`Please ensure wallet ${walletAddress} is active and connected.`)
       }
 
-      // 3. Send payment to creator
+      // 3. Send payment to FusionMarketplace contract
+      const { encodeFunctionData } = await import('viem')
+      const { FUSION_MARKETPLACE_ADDRESS, FUSION_MARKETPLACE_ABI } = await import('@/lib/fusionMarketplace')
+
       const amountInWei = `0x${(parseFloat(bidAmount) * 1e18).toString(16)}`
+
+      // Encode placeBid function call
+      const data = encodeFunctionData({
+        abi: FUSION_MARKETPLACE_ABI,
+        functionName: 'placeBid',
+        args: [BigInt(id)]
+      })
 
       const txHash = await provider.request({
         method: 'eth_sendTransaction',
         params: [{
           from: targetAccount,
-          to: asset.creator.walletAddress,
+          to: FUSION_MARKETPLACE_ADDRESS,
           value: amountInWei,
+          data: data
         }],
       })
 
@@ -380,6 +427,129 @@ export default function AssetDetailPage() {
       alert("Failed to place bid. Please try again.")
     } finally {
       setIsPlacingBid(false)
+    }
+  }
+
+  const handleAcceptOwnership = async () => {
+    if (!asset || !auth.origin || !walletAddress) return
+
+    setIsAcceptingOwnership(true)
+    try {
+      // 1. Transfer NFT ownership on-chain from creator to winner
+      const creatorAddress = asset.creator.walletAddress as `0x${string}`
+      const tokenIdBigInt = BigInt(asset.tokenId!)
+
+      await auth.origin.transferFrom(
+        creatorAddress,
+        walletAddress as `0x${string}`,
+        tokenIdBigInt
+      )
+
+      // 2. Mark ownership as accepted in backend
+      const res = await fetch(`http://localhost:3001/assets/${id}/accept-ownership`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        alert("Ownership accepted successfully! The NFT has been transferred to you.")
+        // Refresh asset data
+        const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
+        if (assetRes.ok) {
+          const assetData = await assetRes.json()
+          setAsset(assetData)
+        }
+      } else {
+        const error = await res.json()
+        alert(`Failed to accept ownership: ${error.error}`)
+      }
+    } catch (error) {
+      console.error("Ownership acceptance failed:", error)
+      alert("Failed to accept ownership. Please try again.")
+    } finally {
+      setIsAcceptingOwnership(false)
+    }
+  }
+
+  const handleRequestDeletion = async () => {
+    if (!asset || !auth.origin) return
+
+    const confirmed = confirm(
+      "Are you sure you want to delete this asset on-chain? This action cannot be undone and you should download the content first."
+    )
+
+    if (!confirmed) return
+
+    setIsRequestingDeletion(true)
+    try {
+      // TODO: Uncomment when requestDelete is available in Origin SDK types
+      // 1. Request deletion on-chain
+      // const tokenIdBigInt = BigInt(asset.tokenId!)
+      // await auth.origin.requestDelete(tokenIdBigInt)
+
+      // 2. Mark deletion as requested in backend
+      const res = await fetch(`http://localhost:3001/assets/${id}/request-deletion`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        alert("Deletion requested successfully! The asset will be removed on-chain.")
+        // Refresh asset data
+        const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
+        if (assetRes.ok) {
+          const assetData = await assetRes.json()
+          setAsset(assetData)
+        }
+      } else {
+        const error = await res.json()
+        alert(`Failed to request deletion: ${error.error}`)
+      }
+    } catch (error) {
+      console.error("Deletion request failed:", error)
+      alert("Failed to request deletion. Please try again.")
+    } finally {
+      setIsRequestingDeletion(false)
+    }
+  }
+
+  const handleClaimRefund = async () => {
+    if (!asset) return
+
+    setIsClaimingRefund(true)
+    try {
+      const res = await fetch(`http://localhost:3001/assets/${id}/claim-refund`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
+
+      if (res.ok) {
+        alert("Refund claimed successfully! Funds have been returned to your wallet.")
+        // Refresh bids
+        const bidsRes = await fetch(`http://localhost:3001/assets/${id}/bids`)
+        if (bidsRes.ok) {
+          const bidsData = await bidsRes.json()
+          setBids(bidsData)
+          setUserHasOutbidBid(false)
+        }
+      } else {
+        const error = await res.json()
+        alert(`Failed to claim refund: ${error.error}`)
+      }
+    } catch (error) {
+      console.error("Refund claim failed:", error)
+      alert("Failed to claim refund. Please try again.")
+    } finally {
+      setIsClaimingRefund(false)
     }
   }
 
@@ -646,15 +816,66 @@ export default function AssetDetailPage() {
 
                 {/* Action Buttons */}
                 <div className="space-y-3">
+                  {/* Winner Acceptance Flow */}
+                  {asset.biddingEnabled &&
+                    asset.biddingStatus === 'completed' &&
+                    asset.biddingWinnerId === currentUserId &&
+                    !asset.ownershipAccepted && (
+                      <Card className="p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-full bg-green-500/20">
+                              <Trophy className="h-6 w-6 text-green-400" />
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold text-green-400">Congratulations!</h3>
+                              <p className="text-sm text-muted-foreground">You won this auction!</p>
+                            </div>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            Click below to accept ownership and transfer the NFT to your wallet.
+                          </p>
+                          <Button
+                            onClick={handleAcceptOwnership}
+                            disabled={isAcceptingOwnership}
+                            className="w-full gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                            size="lg"
+                          >
+                            {isAcceptingOwnership ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                            Accept Ownership & Transfer NFT
+                          </Button>
+                        </div>
+                      </Card>
+                    )}
+
                   {hasAccess ? (
-                    <Button
-                      className="w-full gap-2 rounded-full bg-green-600 hover:bg-green-700"
-                      size="lg"
-                      onClick={() => window.open(downloadUrl || asset.fileUrl || asset.video || asset.thumbnail || "", '_blank')}
-                    >
-                      <Download className="h-4 w-4" />
-                      Download Asset
-                    </Button>
+                    <>
+                      <Button
+                        className="w-full gap-2 rounded-full bg-green-600 hover:bg-green-700"
+                        size="lg"
+                        onClick={() => window.open(downloadUrl || asset.fileUrl || asset.video || asset.thumbnail || "", '_blank')}
+                      >
+                        <Download className="h-4 w-4" />
+                        Download Asset
+                      </Button>
+
+                      {/* Deletion Option (after download) */}
+                      {asset.biddingEnabled &&
+                        asset.ownershipAccepted &&
+                        !asset.deletionRequested &&
+                        asset.biddingWinnerId === currentUserId && (
+                          <Button
+                            onClick={handleRequestDeletion}
+                            disabled={isRequestingDeletion}
+                            variant="destructive"
+                            className="w-full gap-2"
+                            size="lg"
+                          >
+                            {isRequestingDeletion ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                            Delete On-Chain (Permanent)
+                          </Button>
+                        )}
+                    </>
                   ) : asset.biddingEnabled ? (
                     // Bidding UI
                     <div className="space-y-4">
@@ -701,7 +922,7 @@ export default function AssetDetailPage() {
                               id="bid-amount"
                               type="number"
                               step="0.01"
-                              placeholder={`Min: ${bids.length > 0 ? (parseFloat(bids[0].bid.amount) + 0.01).toFixed(2) : asset.biddingStartPrice}`}
+                              placeholder={`Min: ${bids.length > 0 ? (parseFloat(bids[0].bid.amount) + 0.01).toFixed(2) : asset.biddingStartPrice || "0"}`}
                               value={bidAmount}
                               onChange={(e) => setBidAmount(e.target.value)}
                               className="bg-muted/30 border-border/20"
@@ -749,6 +970,19 @@ export default function AssetDetailPage() {
                             ))}
                           </div>
                         </div>
+                      )}
+
+                      {/* Refund Button for Outbid Users */}
+                      {userHasOutbidBid && (
+                        <Button
+                          onClick={handleClaimRefund}
+                          disabled={isClaimingRefund}
+                          className="w-full gap-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                          size="lg"
+                        >
+                          {isClaimingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <Coins className="h-4 w-4" />}
+                          Claim Refund
+                        </Button>
                       )}
                     </div>
                   ) : (

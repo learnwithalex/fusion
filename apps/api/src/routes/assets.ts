@@ -532,6 +532,12 @@ router.post("/:id/bid", authenticate, async (req, res) => {
             return res.status(400).json({ error: "Transaction failed on chain" });
         }
 
+        // Verify transaction went to FusionMarketplace contract
+        const { FUSION_MARKETPLACE_ADDRESS } = await import('../lib/fusionMarketplace');
+        if (receipt.to?.toLowerCase() !== FUSION_MARKETPLACE_ADDRESS.toLowerCase()) {
+            return res.status(400).json({ error: "Transaction must be sent to FusionMarketplace contract" });
+        }
+
         // 2. Get asset and verify bidding is enabled
         const asset = await db.select().from(assets).where(eq(assets.id, parseInt(id)));
         if (!asset[0]) {
@@ -676,6 +682,124 @@ router.post("/:id/finalize-auction", async (req, res) => {
     } catch (error) {
         console.error("Auction finalization error:", error);
         res.status(500).json({ error: "Failed to finalize auction" });
+    }
+});
+
+// Accept ownership (winner only)
+router.post("/:id/accept-ownership", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    try {
+        // Get asset
+        const asset = await db.select().from(assets).where(eq(assets.id, parseInt(id)));
+        if (!asset[0]) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+
+        // Verify caller is the winner
+        if (asset[0].biddingWinnerId !== userId) {
+            return res.status(403).json({ error: "Only the auction winner can accept ownership" });
+        }
+
+        // Verify auction is completed
+        if (asset[0].biddingStatus !== 'completed') {
+            return res.status(400).json({ error: "Auction is not completed" });
+        }
+
+        // Mark ownership as accepted
+        await db.update(assets)
+            .set({ ownershipAccepted: true })
+            .where(eq(assets.id, parseInt(id)));
+
+        res.json({ success: true, message: "Ownership accepted successfully" });
+    } catch (error) {
+        console.error("Ownership acceptance error:", error);
+        res.status(500).json({ error: "Failed to accept ownership" });
+    }
+});
+
+// Request deletion (owner/winner only)
+router.post("/:id/request-deletion", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    try {
+        // Get asset
+        const asset = await db.select().from(assets).where(eq(assets.id, parseInt(id)));
+        if (!asset[0]) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+
+        // Verify caller is the winner or creator
+        if (asset[0].biddingWinnerId !== userId && asset[0].userId !== userId) {
+            return res.status(403).json({ error: "Only the owner can request deletion" });
+        }
+
+        // Mark deletion as requested
+        await db.update(assets)
+            .set({ deletionRequested: true })
+            .where(eq(assets.id, parseInt(id)));
+
+        res.json({ success: true, message: "Deletion requested successfully" });
+    } catch (error) {
+        console.error("Deletion request error:", error);
+        res.status(500).json({ error: "Failed to request deletion" });
+    }
+});
+
+// Claim refund (outbid users only)
+router.post("/:id/claim-refund", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    try {
+        // Get user's wallet address
+        const user = await db.select().from(users).where(eq(users.id, userId));
+        if (!user[0]) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Check if user has an outbid bid for this asset
+        const userBids = await db.select()
+            .from(bids)
+            .where(and(
+                eq(bids.assetId, parseInt(id)),
+                eq(bids.userId, userId),
+                eq(bids.status, 'outbid')
+            ));
+
+        if (userBids.length === 0) {
+            return res.status(400).json({ error: "No refund available" });
+        }
+
+        // Call smart contract to refund
+        const { walletClient, FUSION_MARKETPLACE_ABI, FUSION_MARKETPLACE_ADDRESS } = await import('../lib/fusionMarketplace');
+
+        if (!walletClient) {
+            return res.status(500).json({ error: "Protocol wallet not configured" });
+        }
+
+        await walletClient.writeContract({
+            address: FUSION_MARKETPLACE_ADDRESS,
+            abi: FUSION_MARKETPLACE_ABI,
+            functionName: 'refundBidder',
+            args: [BigInt(id), user[0].walletAddress as `0x${string}`]
+        });
+
+        // Mark bids as refunded
+        await db.update(bids)
+            .set({ status: 'refunded' })
+            .where(and(
+                eq(bids.assetId, parseInt(id)),
+                eq(bids.userId, userId),
+                eq(bids.status, 'outbid')
+            ));
+
+        res.json({ success: true, message: "Refund processed successfully" });
+    } catch (error) {
+        console.error("Refund claim error:", error);
+        res.status(500).json({ error: "Failed to process refund" });
     }
 });
 

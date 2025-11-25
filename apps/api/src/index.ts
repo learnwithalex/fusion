@@ -5,6 +5,8 @@ import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
 import assetRoutes from "./routes/assets";
 
+import { startAuctionFinalizationCron } from "./cron/auctionFinalization";
+
 dotenv.config();
 
 const app = express();
@@ -24,4 +26,5 @@ app.get("/", (req, res) => {
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  startAuctionFinalizationCron();
 });

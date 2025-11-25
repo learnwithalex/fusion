@@ -58,6 +58,8 @@ export const assets = pgTable("assets", {
     biddingEndsAt: timestamp("bidding_ends_at"),
     biddingWinnerId: integer("bidding_winner_id").references(() => users.id),
     biddingStatus: text("bidding_status").default("pending"), // pending, active, ended, completed
+    ownershipAccepted: boolean("ownership_accepted").default(false),
+    deletionRequested: boolean("deletion_requested").default(false),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });

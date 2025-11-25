@@ -363,6 +363,21 @@ export default function UploadPage() {
         })
       })
 
+      // 5. If bidding enabled, approve marketplace to transfer NFT
+      if (biddingEnabled && tokenId) {
+        try {
+          const { FUSION_MARKETPLACE_ADDRESS } = await import('@/lib/fusionMarketplace')
+          await auth.origin.approve(
+            FUSION_MARKETPLACE_ADDRESS,
+            BigInt(tokenId)
+          )
+          console.log("NFT approved for marketplace")
+        } catch (error) {
+          console.error("NFT approval failed:", error)
+          alert("Warning: NFT approval failed. Auction may not work correctly.")
+        }
+      }
+
       // Clear remix data
       localStorage.removeItem('toRemixId')
       localStorage.removeItem('toRemixTokenId')

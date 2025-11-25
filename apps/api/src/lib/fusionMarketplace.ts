@@ -2,8 +2,9 @@ import { createPublicClient, createWalletClient, http, type Address } from 'viem
 import { privateKeyToAccount } from 'viem/accounts';
 import { campnetwork } from './campnetwork';
 
-// Contract address on Basecamp
-export const FUSION_MARKETPLACE_ADDRESS = '0xe23d977B550440B8d2803393fE638d81061920c9' as const;
+// Contract addresses on Basecamp
+export const FUSION_MARKETPLACE_ADDRESS = '0x00329CEBD0B06690aA5a28982CD614185AEA6033' as const;
+export const ORIGIN_IPNFT_ADDRESS = '0xB53F5723Dd4E46da32e1769Bd36A5aD880e707A5' as const;
 
 // Protocol wallet (for automated operations)
 const PROTOCOL_PRIVATE_KEY = process.env.PROTOCOL_PRIVATE_KEY as `0x${string}`;

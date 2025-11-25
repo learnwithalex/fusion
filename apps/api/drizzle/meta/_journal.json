@@ -15,6 +15,13 @@
       "when": 1763917673589,
       "tag": "0001_awesome_mad_thinker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764082123961,
+      "tag": "0002_messy_adam_warlock",
+      "breakpoints": true
     }
   ]
 }

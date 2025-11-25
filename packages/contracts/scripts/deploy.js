@@ -8,8 +8,7 @@ async function main() {
     console.log("Deploying with account:", deployer.address);
 
     // Origin Protocol IpNFT contract address on Basecamp
-    // TODO: Replace with actual Origin IpNFT contract address
-    const ORIGIN_IPNFT_ADDRESS = "0x0000000000000000000000000000000000000000";
+    const ORIGIN_IPNFT_ADDRESS = "0xB53F5723Dd4E46da32e1769Bd36A5aD880e707A5";
 
     const FusionMarketplace = await hre.ethers.getContractFactory("FusionMarketplace", deployer);
     const marketplace = await FusionMarketplace.deploy(ORIGIN_IPNFT_ADDRESS);
