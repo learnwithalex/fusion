@@ -269,7 +269,7 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+      <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
         <Navbar />
         <Sidebar />
         <main className="ml-20 px-8 py-8">
@@ -280,7 +280,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+    <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
       <Navbar />
       <Sidebar />
 
@@ -294,7 +294,7 @@ export default function ProfilePage() {
                 <img src={profile.headerImage} alt="Header" className="h-full w-full object-cover" />
               </div>
             ) : (
-              <div className="h-64 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-fuchsia-500 opacity-80" />
+              <div className="h-64 w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 opacity-80" />
             )}
 
             <div className="px-10 pb-10">
@@ -302,30 +302,30 @@ export default function ProfilePage() {
                 <div className="flex items-start gap-8">
                   {/* Avatar */}
                   <div className="relative -mt-24">
-                    <div className="h-40 w-40 rounded-[2rem] border-4 border-slate-950 bg-slate-900 flex items-center justify-center shadow-2xl overflow-hidden group">
+                    <div className="h-40 w-40 rounded-[2rem] border-4 border-black bg-black/50 flex items-center justify-center shadow-2xl overflow-hidden group">
                       {profile.profileImage ? (
                         <img src={profile.profileImage} alt="Profile" className="h-full w-full object-cover" />
                       ) : (
                         <>
-                          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                          <User className="h-20 w-20 text-cyan-200" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                          <User className="h-20 w-20 text-violet-200" />
                         </>
                       )}
                     </div>
-                    <div className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-green-500 border-4 border-slate-950" />
+                    <div className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-green-500 border-4 border-black" />
                   </div>
 
                   {/* Profile Info */}
                   <div className="mt-6">
                     <div className="flex items-center gap-4 mb-2">
                       <h1 className="text-4xl font-bold text-white tracking-tight">{profile.name || "Anonymous"}</h1>
-                      <Badge variant="secondary" className="rounded-full bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3">
+                      <Badge variant="secondary" className="rounded-full bg-violet-600/10 text-violet-400 border-violet-600/20 px-3">
                         Verified Creator
                       </Badge>
                     </div>
 
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-cyan-200/70">
+                      <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-violet-200/70">
                         {shortenAddress(profile.walletAddress)}
                         <button onClick={copyAddress} className="hover:text-white transition-colors">
                           <Copy className="h-3 w-3" />
@@ -335,19 +335,19 @@ export default function ProfilePage() {
                         href={`https://basecamp.cloud.blockscout.com/address/${profile.walletAddress}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-cyan-200/70 hover:text-white transition-colors"
+                        className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-violet-200/70 hover:text-white transition-colors"
                       >
                         <ExternalLink className="h-3 w-3" />
                         Basecamp
                       </a>
                     </div>
 
-                    <p className="text-lg text-cyan-100/70 max-w-2xl mb-6 leading-relaxed">{profile.bio || "No bio yet"}</p>
+                    <p className="text-lg text-violet-100/70 max-w-2xl mb-6 leading-relaxed">{profile.bio || "No bio yet"}</p>
 
                     <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground flex-wrap">
                       {profile.website && (
                         <div className="flex items-center gap-2">
-                          <LinkIcon className="h-4 w-4 text-cyan-400" />
+                          <LinkIcon className="h-4 w-4 text-violet-400" />
                           <a href={`https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.website}</a>
                         </div>
                       )}
