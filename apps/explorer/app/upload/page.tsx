@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
-import { Upload, FileText, ImageIcon, Music, Video, Gamepad2, Sparkles } from 'lucide-react'
+import { Upload, FileText, ImageIcon, Music, Video, Gamepad2, Sparkles, Palette, Code, Cpu, ArrowRight } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { useAuth, useAuthState } from "@campnetwork/origin/react"
 import { useRouter } from "next/navigation"
@@ -468,16 +468,16 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
       <Navbar />
       <Sidebar />
 
       <main className="ml-20 px-8 py-8">
         <div className="mx-auto max-w-[1200px]">
           {remixParent && (
-            <div className="mb-8 rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4 backdrop-blur-sm">
+            <div className="mb-8 rounded-xl border border-violet-600/20 bg-violet-600/10 p-4 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/20 text-cyan-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/20 text-violet-400">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
@@ -491,10 +491,12 @@ export default function UploadPage() {
           )}
 
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Upload & Mint IP Asset</h1>
-            <p className="text-muted-foreground">
-              Create a new IP asset with licensing terms and mint it to the blockchain
+          <div className="mb-12 text-center lg:text-left">
+            <h1 className="text-5xl font-black tracking-tighter text-white mb-4">
+              Upload & <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400">Mint</span>
+            </h1>
+            <p className="text-xl text-slate-400 max-w-2xl">
+              Create a new IP asset with automated licensing terms and mint it directly to the blockchain.
             </p>
           </div>
 
@@ -502,10 +504,10 @@ export default function UploadPage() {
             {/* Upload Form */}
             <div className="lg:col-span-2 space-y-6">
               {/* File Upload */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
-                <h2 className="text-xl font-semibold mb-4">Upload File</h2>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+                <h2 className="text-2xl font-bold text-white mb-6">Upload File</h2>
                 <div
-                  className="rounded-xl border-2 border-dashed border-border/30 bg-muted/20 p-12 text-center transition-colors hover:border-border/50 hover:bg-muted/30 cursor-pointer"
+                  className="group relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/10 bg-white/5 p-16 text-center transition-all hover:border-violet-600/50 hover:bg-violet-600/5 cursor-pointer"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
@@ -514,19 +516,21 @@ export default function UploadPage() {
                     ref={fileInputRef}
                     onChange={handleFileSelect}
                   />
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500/10 to-purple-600/10">
-                    <Upload className="h-8 w-8 text-blue-400" />
+                  <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-600/20 to-purple-700/20 shadow-lg shadow-violet-600/10 group-hover:scale-110 transition-transform duration-300">
+                    <Upload className="h-10 w-10 text-violet-400" />
                   </div>
-                  <h3 className="mb-2 text-lg font-semibold">{file ? file.name : "Drop your file here"}</h3>
-                  <p className="mb-4 text-sm text-muted-foreground">
+                  <h3 className="mb-2 text-xl font-bold text-white">{file ? file.name : "Drop your file here"}</h3>
+                  <p className="mb-6 text-slate-400">
                     or click to browse from your computer
                   </p>
-                  <Button className="rounded-full" variant="secondary">Choose File</Button>
-                  <p className="mt-4 text-xs text-muted-foreground">
+                  <Button className="rounded-full bg-white text-slate-900 hover:bg-slate-200 font-bold px-8">
+                    Choose File
+                  </Button>
+                  <p className="mt-6 text-xs font-medium text-slate-500 uppercase tracking-wider">
                     Supported formats: MP3, MP4, PNG, JPG, GLB, GLTF (Max 100MB)
                   </p>
                 </div>
-              </Card>
+              </div>
 
               {/* Thumbnail & Marketing Video */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -604,178 +608,216 @@ export default function UploadPage() {
               </div>
 
               {/* Metadata */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
-                <h2 className="text-xl font-semibold mb-4">Asset Details</h2>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Asset Name</Label>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+                <h2 className="text-2xl font-bold text-white mb-6">Asset Details</h2>
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-base font-medium text-slate-300">Asset Name</Label>
                     <Input
                       id="name"
                       placeholder="Enter a descriptive name for your asset"
-                      className="mt-2 bg-muted/30 border-border/20"
+                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-600/50 focus:ring-violet-600/20"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="description">Description</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="description" className="text-base font-medium text-slate-300">Description</Label>
                     <Textarea
                       id="description"
                       placeholder="Describe your asset, its use cases, and any special features..."
-                      className="mt-2 min-h-32 bg-muted/30 border-border/20"
+                      className="min-h-32 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-600/50 focus:ring-violet-600/20"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="tags">Tags</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="tags" className="text-base font-medium text-slate-300">Tags</Label>
                     <Input
                       id="tags"
                       placeholder="music, synthwave, electronic (comma separated)"
-                      className="mt-2 bg-muted/30 border-border/20"
+                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-600/50 focus:ring-violet-600/20"
                       value={tags}
                       onChange={(e) => setTags(e.target.value)}
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="type">Asset Type</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="type" className="text-base font-medium text-slate-300">Asset Type</Label>
                     <Select onValueChange={setType}>
-                      <SelectTrigger className="mt-2 bg-muted/30 border-border/20">
+                      <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-cyan-500/20">
                         <SelectValue placeholder="Select asset type" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-900 border-white/10 text-white">
                         <SelectItem value="Music">
                           <div className="flex items-center gap-2">
-                            <Music className="h-4 w-4" />
-                            Music
+                            <Music className="h-4 w-4 text-fuchsia-400" />
+                            Music & Audio
                           </div>
                         </SelectItem>
                         <SelectItem value="Art">
                           <div className="flex items-center gap-2">
-                            <ImageIcon className="h-4 w-4" />
-                            Art
+                            <Palette className="h-4 w-4 text-violet-400" />
+                            Art & Design
                           </div>
                         </SelectItem>
                         <SelectItem value="Video">
                           <div className="flex items-center gap-2">
-                            <Video className="h-4 w-4" />
-                            Video
+                            <Video className="h-4 w-4 text-cyan-400" />
+                            Video & Animation
                           </div>
                         </SelectItem>
                         <SelectItem value="Game Model">
                           <div className="flex items-center gap-2">
-                            <Gamepad2 className="h-4 w-4" />
-                            3D Model
+                            <Gamepad2 className="h-4 w-4 text-emerald-400" />
+                            3D & Game Assets
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="Code">
+                          <div className="flex items-center gap-2">
+                            <Code className="h-4 w-4 text-blue-400" />
+                            Code & Scripts
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="AI Model">
+                          <div className="flex items-center gap-2">
+                            <Cpu className="h-4 w-4 text-rose-400" />
+                            AI Models
                           </div>
                         </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-              </Card>
+              </div>
 
               {/* License Settings */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
-                <h2 className="text-xl font-semibold mb-4">License Settings</h2>
-                <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="price">License Price (CAMP)</Label>
-                    <Input
-                      id="price"
-                      type="number"
-                      step="0.01"
-                      placeholder="0.5"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className="mt-2 bg-muted/30 border-border/20"
-                    />
-                  </div>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+                <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-violet-400" />
+                  License Terms
+                </h2>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <Label htmlFor="price" className="text-base font-medium text-slate-300">License Price (CAMP)</Label>
+                      <div className="relative">
+                        <Input
+                          id="price"
+                          type="number"
+                          step="0.01"
+                          min="0.01"
+                          placeholder="0.5"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          className="h-12 bg-white/5 border-white/10 text-lg text-white placeholder:text-slate-500 focus:border-violet-600/50 focus:ring-violet-600/20"
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-violet-400">CAMP</div>
+                      </div>
+                      <p className="text-xs text-slate-500">Minimum price is 0.01 CAMP</p>
+                    </div>
 
-                  <div>
-                    <Label>Royalty Percentage: {royalty[0]}%</Label>
-                    <Slider
-                      value={royalty}
-                      onValueChange={setRoyalty}
-                      max={50}
-                      step={1}
-                      className="mt-4"
-                    />
-                    <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>0%</span>
-                      <span>50%</span>
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium text-slate-300">Royalty Percentage</Label>
+                      <div className="flex h-12 items-center rounded-md border border-white/10 bg-white/5 px-4 text-slate-400 cursor-not-allowed">
+                        <span className="flex-1 text-lg font-medium text-white">10%</span>
+                        <span className="text-xs font-medium text-slate-500 uppercase">Fixed Protocol Rate</span>
+                      </div>
+                      <p className="text-xs text-slate-500">Standard royalty rate for all Fusion assets</p>
                     </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="duration">License Duration</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="duration" className="text-base font-medium text-slate-300">License Duration</Label>
                     <Select>
-                      <SelectTrigger className="mt-2 bg-muted/30 border-border/20">
+                      <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-cyan-500/20">
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-slate-900 border-white/10 text-white">
                         <SelectItem value="7">7 days</SelectItem>
                         <SelectItem value="30">30 days</SelectItem>
+                        <SelectItem value="90">90 days</SelectItem>
+                        <SelectItem value="365">1 year</SelectItem>
+                        <SelectItem value="lifetime">Lifetime</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-
-
                 </div>
-              </Card>
+              </div>
 
               {/* Bidding Options */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
-                <h2 className="text-xl font-semibold mb-4">Auction Settings</h2>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label htmlFor="bidding-enabled">Enable Auction</Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        List this asset for auction instead of fixed price
-                      </p>
-                    </div>
-                    <input
-                      id="bidding-enabled"
-                      type="checkbox"
-                      checked={biddingEnabled}
-                      onChange={(e) => setBiddingEnabled(e.target.checked)}
-                      className="w-5 h-5 rounded border-border/20 bg-muted/30"
-                    />
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                      <ArrowRight className="h-5 w-5 text-violet-400" />
+                      Auction Settings
+                    </h2>
+                    <p className="text-sm text-slate-400 mt-1">
+                      List this asset for auction instead of fixed price
+                    </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setBiddingEnabled(!biddingEnabled)}
+                    className={`relative inline-flex h-8 w-16 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-violet-600/50 focus:ring-offset-2 focus:ring-offset-black ${biddingEnabled
+                      ? 'bg-gradient-to-r from-violet-600 to-purple-700 shadow-lg shadow-violet-600/30'
+                      : 'bg-white/10 border border-white/20'
+                      }`}
+                  >
+                    <span className="sr-only">Toggle auction</span>
+                    <span
+                      className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-all duration-300 ${biddingEnabled ? 'translate-x-9' : 'translate-x-1'
+                        }`}
+                    />
+                    <span className={`absolute text-[10px] font-bold uppercase tracking-wide transition-opacity duration-200 ${biddingEnabled ? 'left-2 text-white opacity-100' : 'opacity-0'
+                      }`}>
+                      On
+                    </span>
+                    <span className={`absolute text-[10px] font-bold uppercase tracking-wide transition-opacity duration-200 ${!biddingEnabled ? 'right-2 text-slate-400 opacity-100' : 'opacity-0'
+                      }`}>
+                      Off
+                    </span>
+                  </button>
+                </div>
 
-                  {biddingEnabled && (
-                    <>
-                      <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
-                        <p className="text-sm text-yellow-200">
-                          ⚠️ By enabling auction, the asset will be held by the protocol until the auction completes.
+                {biddingEnabled && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                    <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4">
+                      <div className="flex gap-3">
+                        <div className="mt-0.5">⚠️</div>
+                        <p className="text-sm text-yellow-200/80 leading-relaxed">
+                          By enabling auction, the asset will be held by the protocol until the auction completes.
                           The highest bidder wins when the time expires.
                         </p>
                       </div>
+                    </div>
 
-                      <div>
-                        <Label htmlFor="bidding-start-price">Starting Bid (CAMP)</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <Label htmlFor="bidding-start-price" className="text-base font-medium text-slate-300">Starting Bid (CAMP)</Label>
                         <Input
                           id="bidding-start-price"
                           type="number"
                           step="0.01"
+                          min="0.01"
                           placeholder="1.0"
                           value={biddingStartPrice}
                           onChange={(e) => setBiddingStartPrice(e.target.value)}
-                          className="mt-2 bg-muted/30 border-border/20"
+                          className="h-12 bg-white/5 border-white/10 text-white focus:border-violet-600/50 focus:ring-violet-600/20"
                           required
                         />
                       </div>
 
-                      <div>
-                        <Label htmlFor="bidding-duration">Auction Duration (after first bid)</Label>
+                      <div className="space-y-3">
+                        <Label htmlFor="bidding-duration" className="text-base font-medium text-slate-300">Auction Duration</Label>
                         <Select value={biddingDuration} onValueChange={setBiddingDuration}>
-                          <SelectTrigger className="mt-2 bg-muted/30 border-border/20">
+                          <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-cyan-500/20">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-slate-900 border-white/10 text-white">
                             <SelectItem value="1">1 hour</SelectItem>
                             <SelectItem value="6">6 hours</SelectItem>
                             <SelectItem value="12">12 hours</SelectItem>
@@ -785,50 +827,47 @@ export default function UploadPage() {
                             <SelectItem value="168">7 days</SelectItem>
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Auction starts when the first bid is placed and ends after this duration
-                        </p>
                       </div>
-                    </>
-                  )}
-                </div>
-              </Card>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Parent IP (Optional) */}
               {/* Parent IP (Optional) */}
-              <Card className={`rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm ${remixParent ? 'border-yellow-500/20 bg-yellow-500/5' : ''}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-xl font-semibold">Parent IP</h2>
+              <div className={`rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl ${remixParent ? 'border-yellow-500/20 bg-yellow-500/5' : ''}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">Parent IP</h2>
                   {remixParent && <span className="text-xs font-mono text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded bg-yellow-500/10">REQUIRED FOR DERIVATIVES</span>}
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-slate-400 mb-6">
                   If this is a derivative work, you <span className="text-yellow-400 font-medium">MUST</span> specify the parent IP asset. Failure to do so may result in your IP being deleted.
                 </p>
 
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="parentTokenId">Parent Token ID</Label>
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="parentTokenId" className="text-base font-medium text-slate-300">Parent Token ID</Label>
                     <Input
                       id="parentTokenId"
                       placeholder="Enter Token ID (e.g. 1234)"
-                      className="mt-2 bg-muted/30 border-border/20"
+                      className="h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-600/50 focus:ring-violet-600/20"
                       defaultValue={remixParent?.tokenId || ""}
                       onBlur={handleParentTokenIdBlur}
-                      disabled={!!localStorage.getItem('toRemixId')} // Disable if loaded from storage (as per "just take the name value automatically")
+                      disabled={!!localStorage.getItem('toRemixId')}
                     />
                   </div>
 
                   {remixParent && (
-                    <div className="rounded-lg border border-border/10 bg-black/20 p-3">
+                    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                          <div className="h-10 w-10 rounded bg-violet-600/20 flex items-center justify-center text-violet-400">
                             <Sparkles className="h-5 w-5" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-white">{remixParent.name}</p>
-                            <p className="text-xs text-muted-foreground">Token ID: {remixParent.tokenId}</p>
+                            <p className="text-xs text-slate-500">Token ID: {remixParent.tokenId}</p>
                           </div>
                         </div>
                         <Button
@@ -847,7 +886,7 @@ export default function UploadPage() {
                       </div>
 
                       {hasAccess === false && (
-                        <div className="mt-2 rounded bg-red-500/10 p-3 border border-red-500/20">
+                        <div className="mt-2 rounded-lg bg-red-500/10 p-3 border border-red-500/20">
                           <p className="text-sm text-red-200 mb-2">
                             You must own a license to remix this asset.
                           </p>
@@ -861,65 +900,63 @@ export default function UploadPage() {
                     </div>
                   )}
                 </div>
-              </Card>
+              </div>
             </div>
 
             {/* Preview & Actions */}
             <div className="space-y-6">
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm sticky top-24">
-                <h2 className="text-xl font-semibold mb-4">Preview</h2>
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl sticky top-24">
+                <h2 className="text-xl font-bold text-white mb-6">Preview</h2>
 
-                <div className="mb-6 aspect-square rounded-xl bg-muted/20 flex items-center justify-center overflow-hidden">
+                <div className="mb-6 aspect-square rounded-2xl bg-black/20 flex items-center justify-center overflow-hidden border border-white/5">
                   {thumbnailUrl ? (
                     <img src={thumbnailUrl} alt="Preview" className="w-full h-full object-cover" />
                   ) : filePreview ? (
                     <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <FileText className="h-16 w-16 text-muted-foreground" />
+                    <FileText className="h-16 w-16 text-slate-600" />
                   )}
                 </div>
 
-                <Separator className="my-6 bg-border/10" />
+                <Separator className="my-6 bg-white/10" />
 
-                <div className="space-y-3 mb-6">
+                <div className="space-y-4 mb-8">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">License Price</span>
-                    <span className="font-semibold">{price || "0"} CAMP</span>
+                    <span className="text-slate-400">License Price</span>
+                    <span className="font-mono font-bold text-white">{price || "0"} CAMP</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Royalty</span>
-                    <span className="font-semibold text-blue-400">{royalty[0]}%</span>
+                    <span className="text-slate-400">Royalty</span>
+                    <span className="font-mono font-bold text-violet-400">{royalty[0]}%</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Type</span>
-                    <span className="font-semibold">{type || "Not selected"}</span>
+                    <span className="text-slate-400">Type</span>
+                    <span className="font-medium text-white">{type || "Not selected"}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Protocol Fee</span>
-                    <span className="font-semibold text-orange-400">0.1 CAMP</span>
+                    <span className="text-slate-400">Protocol Fee</span>
+                    <span className="font-mono font-bold text-violet-400">0.1 CAMP</span>
                   </div>
                 </div>
 
-                <Separator className="my-6 bg-border/10" />
-
                 <div className="space-y-3">
                   <Button
-                    className="w-full gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+                    className="w-full h-12 gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-bold shadow-lg shadow-violet-600/20"
                     size="lg"
                     onClick={handleMint}
                     disabled={isMinting || !file || !name || !price || (!!remixParent && hasAccess === false)}
                   >
-                    {isMinting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {isMinting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
                     {isMinting ? "Minting..." : "Mint Asset"}
                   </Button>
                 </div>
 
-                <div className="mt-6 rounded-lg bg-blue-500/5 border border-blue-500/10 p-4">
-                  <p className="text-xs text-muted-foreground">
+                <div className="mt-6 rounded-xl bg-violet-600/5 border border-violet-600/10 p-4">
+                  <p className="text-xs text-violet-200/60 leading-relaxed text-center">
                     By minting, you confirm that you own the rights to this content and agree to the platform terms.
                   </p>
                 </div>
-              </Card>
+              </div>
             </div>
           </div>
         </div>

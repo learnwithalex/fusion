@@ -32,11 +32,11 @@ export function Sidebar() {
               className={cn(
                 "group relative flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200",
                 isActive
-                  ? "bg-gradient-to-br from-cyan-500/10 to-violet-600/10 text-cyan-400 shadow-[0_0_20px_-5px_rgba(6,182,212,0.3)] scale-110"
+                  ? "bg-gradient-to-br from-violet-600/10 to-purple-700/10 text-violet-400 shadow-[0_0_20px_-5px_rgba(124,58,237,0.3)] scale-110"
                   : "text-muted-foreground hover:bg-white/10 hover:text-white hover:scale-105"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className={item.label === "Upload" ? "h-4 w-4" : "h-5 w-5"} />
 
               <span className="absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-slate-900/90 backdrop-blur-xl border border-white/10 px-3 py-1.5 text-sm font-medium text-white shadow-xl group-hover:block z-50">
                 {item.label}

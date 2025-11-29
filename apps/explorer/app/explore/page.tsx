@@ -160,7 +160,7 @@ export default function ExplorePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+    <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
       <Navbar />
       <Sidebar />
 
@@ -182,7 +182,7 @@ export default function ExplorePage() {
                     placeholder="Search assets, creators..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-12 rounded-full border-white/10 bg-white/5 pl-11 backdrop-blur-md transition-all focus:bg-white/10 focus:ring-cyan-500/50"
+                    className="h-12 rounded-full border-white/10 bg-white/5 pl-11 backdrop-blur-md transition-all focus:bg-white/10 focus:ring-violet-600/50"
                   />
                 </div>
                 <Button
@@ -191,7 +191,7 @@ export default function ExplorePage() {
                   onClick={() => setShowFilters(!showFilters)}
                   className={cn(
                     "h-12 w-12 rounded-full border-white/10 bg-white/5 backdrop-blur-md transition-all hover:bg-white/10",
-                    showFilters && "bg-cyan-500/20 border-cyan-500/50 text-cyan-400"
+                    showFilters && "bg-violet-600/20 border-violet-600/50 text-violet-400"
                   )}
                 >
                   <SlidersHorizontal className="h-5 w-5" />
@@ -302,7 +302,7 @@ export default function ExplorePage() {
                   {activeFiltersCount > 0 && (
                     <div className="flex gap-2">
                       {selectedType !== "all" && (
-                        <Badge variant="secondary" className="bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border-cyan-500/20">
+                        <Badge variant="secondary" className="bg-violet-600/10 text-violet-400 hover:bg-violet-600/20 border-violet-600/20">
                           Type: {selectedType}
                           <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => setSelectedType("all")} />
                         </Badge>

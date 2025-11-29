@@ -146,12 +146,12 @@ export default function AgentPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 overflow-hidden flex flex-col">
+        <div className="min-h-screen bg-black overflow-hidden flex flex-col">
             <Navbar />
 
             <main className="flex-1 relative">
                 {/* Background Gradients */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 z-0" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-black z-0" />
 
                 {/* Globe Container */}
                 <div className="absolute inset-0 flex items-center justify-center z-10">
@@ -168,7 +168,7 @@ export default function AgentPage() {
                 </div>
 
                 {/* Icon Bar */}
-                <AgentIconBar activeView={activeView} onViewChange={setActiveView} />
+                {/* <AgentIconBar activeView={activeView} onViewChange={setActiveView} /> */}
 
                 {/* Overlay UI */}
                 <div className="absolute inset-0 z-20 pointer-events-none">
@@ -184,7 +184,7 @@ export default function AgentPage() {
                                         <span className="text-xs text-green-400">+12%</span>
                                     </div>
                                     <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full w-3/4 bg-cyan-500 rounded-full" />
+                                        <div className="h-full w-3/4 bg-violet-600 rounded-full" />
                                     </div>
                                 </Card>
 
@@ -207,7 +207,7 @@ export default function AgentPage() {
                                                 {n.eventType === 'flagged' ? 'Content Copyright Detected' : 'New Asset Registered'}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                                <span className="font-mono text-cyan-400">#{n.tokenId}</span>
+                                                <span className="font-mono text-violet-400">#{n.tokenId}</span>
                                                 <span>•</span>
                                                 <span>{n.platform}</span>
                                             </div>
@@ -217,7 +217,7 @@ export default function AgentPage() {
                             </div>
 
                             {selectedEvent && (
-                                <Card className="w-80 bg-black/40 border-cyan-500/50 backdrop-blur-xl p-6 pointer-events-auto animate-in fade-in zoom-in duration-300">
+                                <Card className="w-80 bg-black/40 border-violet-600/50 backdrop-blur-xl p-6 pointer-events-auto animate-in fade-in zoom-in duration-300">
                                     <div className="flex items-center justify-between mb-4">
                                         <Badge variant="outline" className={`
                                             ${selectedEvent.eventType === 'flagged' ? 'border-red-500 text-red-400' :
@@ -242,7 +242,7 @@ export default function AgentPage() {
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Token ID</span>
-                                            <span className="text-cyan-400 font-mono">{selectedEvent.tokenId}</span>
+                                            <span className="text-violet-400 font-mono">{selectedEvent.tokenId}</span>
                                         </div>
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">Camp ID</span>
@@ -258,7 +258,7 @@ export default function AgentPage() {
                                         </div>
                                     </div>
 
-                                    <Button className="w-full mt-6 bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
+                                    <Button className="w-full mt-6 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-semibold">
                                         View Full Report
                                     </Button>
                                 </Card>

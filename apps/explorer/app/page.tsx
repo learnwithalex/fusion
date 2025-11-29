@@ -150,7 +150,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+    <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
       <Navbar />
       <Sidebar />
 
@@ -164,18 +164,18 @@ export default function HomePage() {
             <div className="mb-8 flex flex-col gap-6">
               <div className="flex items-center justify-between">
                 <TabsList className="h-12 bg-white/5 border border-white/10 backdrop-blur-md p-1 rounded-full">
-                  <TabsTrigger value="trending" className="rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300 gap-2">
+                  <TabsTrigger value="trending" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300 gap-2">
                     <TrendingUp className="h-4 w-4" />
                     Trending
                   </TabsTrigger>
-                  <TabsTrigger value="recent" className="rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300 gap-2">
+                  <TabsTrigger value="recent" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300 gap-2">
                     <Clock className="h-4 w-4" />
                     Recent
                   </TabsTrigger>
-                  <TabsTrigger value="music" className="rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Music</TabsTrigger>
-                  <TabsTrigger value="art" className="rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Art</TabsTrigger>
-                  <TabsTrigger value="video" className="rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Video</TabsTrigger>
-                  <TabsTrigger value="models" className="rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">3D Models</TabsTrigger>
+                  <TabsTrigger value="music" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Music</TabsTrigger>
+                  <TabsTrigger value="art" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Art</TabsTrigger>
+                  <TabsTrigger value="video" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Video</TabsTrigger>
+                  <TabsTrigger value="models" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">3D Models</TabsTrigger>
                 </TabsList>
 
                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md">
@@ -185,7 +185,7 @@ export default function HomePage() {
                     onClick={toggleSort}
                     className={cn(
                       "h-10 rounded-full px-4 text-muted-foreground hover:text-white hover:bg-white/10 gap-2 transition-colors",
-                      sortOrder && "text-cyan-400 bg-cyan-500/10"
+                      sortOrder && "text-violet-400 bg-violet-600/10"
                     )}
                   >
                     <ArrowUpDown className="h-4 w-4" />
@@ -198,7 +198,7 @@ export default function HomePage() {
                     onClick={() => setShowFilters(!showFilters)}
                     className={cn(
                       "h-10 rounded-full px-4 text-muted-foreground hover:text-white hover:bg-white/10 gap-2 transition-colors",
-                      showFilters && "text-cyan-400 bg-cyan-500/10"
+                      showFilters && "text-violet-400 bg-violet-600/10"
                     )}
                   >
                     <SlidersHorizontal className="h-4 w-4" />

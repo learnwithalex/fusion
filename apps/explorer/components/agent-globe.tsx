@@ -62,10 +62,21 @@ export const AgentGlobe = forwardRef<AgentGlobeRef, AgentGlobeProps>(({ markers,
     useEffect(() => {
         setGlobeReady(true)
 
-        // Auto-rotate
+        // Enhanced auto-rotate with random variations
         if (globeEl.current) {
             globeEl.current.controls().autoRotate = true
-            globeEl.current.controls().autoRotateSpeed = 0.5
+            globeEl.current.controls().autoRotateSpeed = 1.5 // Increased from 0.5 to 1.5
+
+            // Add random rotation variations for more dynamic movement
+            const randomRotation = setInterval(() => {
+                if (globeEl.current && globeEl.current.controls().autoRotate) {
+                    // Randomly vary the speed between 1 and 2.5
+                    const randomSpeed = 1 + Math.random() * 1.5
+                    globeEl.current.controls().autoRotateSpeed = randomSpeed
+                }
+            }, 5000) // Change speed every 5 seconds
+
+            return () => clearInterval(randomRotation)
         }
     }, [])
 

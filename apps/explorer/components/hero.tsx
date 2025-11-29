@@ -60,22 +60,22 @@ export function Hero() {
 
             {/* Background Effects */}
             <div className="absolute left-1/2 top-1/2 -z-10 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 opacity-30">
-                <div className="absolute inset-0 animate-pulse rounded-full bg-cyan-500/20 blur-[120px]" />
+                <div className="absolute inset-0 animate-pulse rounded-full bg-violet-600/20 blur-[120px]" />
                 <div className="absolute inset-0 translate-x-20 translate-y-20 animate-pulse rounded-full bg-fuchsia-500/20 blur-[120px] delay-1000" />
             </div>
 
             {/* Left Content */}
             <div className="relative z-10 max-w-4xl text-center lg:text-left">
                 <Link href="/agent">
-                    <div className="group mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 backdrop-blur-md cursor-pointer transition-all hover:bg-cyan-500/20 hover:border-cyan-500/30 hover:scale-105">
+                    <div className="group mb-6 inline-flex items-center gap-2 rounded-full border border-violet-600/20 bg-violet-600/10 px-4 py-1.5 backdrop-blur-md cursor-pointer transition-all hover:bg-violet-600/20 hover:border-violet-600/30 hover:scale-105">
                         <span className="relative flex h-2 w-2">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-500"></span>
                         </span>
-                        <span className="text-sm font-medium text-cyan-300">
+                        <span className="text-sm font-medium text-violet-300">
                             AI-Powered Royalty Enforcement
                         </span>
-                        <ArrowRight className="h-3 w-3 text-cyan-400 transition-transform group-hover:translate-x-1" />
+                        <ArrowRight className="h-3 w-3 text-violet-400 transition-transform group-hover:translate-x-1" />
                     </div>
                 </Link>
 
@@ -109,7 +109,7 @@ export function Hero() {
 
                 <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
                     <Link href="/upload">
-                        <Button size="lg" className="group h-16 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-10 text-xl font-bold text-white shadow-lg shadow-cyan-500/20 transition-all hover:scale-105 hover:shadow-cyan-500/40">
+                        <Button size="lg" className="group h-16 rounded-lg bg-gradient-to-r from-violet-600 to-purple-700 px-10 text-xl font-bold text-white shadow-lg shadow-violet-600/20 transition-all hover:scale-105 hover:shadow-violet-600/40">
                             <span className="flex items-center gap-2">
                                 Start Earning
                                 <Rocket className="h-5 w-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
@@ -153,7 +153,7 @@ export function Hero() {
                         <div className="space-y-2 pt-4 border-t border-white/5">
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-400">Revenue Generated</span>
-                                <span className="font-mono font-bold text-cyan-400">
+                                <span className="font-mono font-bold text-violet-400">
                                     $<Counter end={8452} duration={3000} />.00
                                 </span>
                             </div>
