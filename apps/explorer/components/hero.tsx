@@ -132,7 +132,7 @@ export function Hero() {
                 <div className="relative h-[500px] w-[380px] rotate-y-12 rotate-x-6 transform rounded-3xl border border-white/10 bg-slate-900/80 p-6 backdrop-blur-xl shadow-2xl transition-transform duration-500 hover:rotate-0 hover:scale-105">
                     {/* Card Content */}
                     <div className="mb-6 h-64 overflow-hidden rounded-2xl bg-black">
-                        <img
+                        <img loading="lazy"
                             src="/hero-asset.png"
                             alt="Cosmic Dreams"
                             className="h-full w-full object-cover transition-transform duration-700 hover:scale-110"

@@ -40,6 +40,7 @@ interface Asset {
     thumbnail: string | null
     type: string
     createdAt: string
+    tokenId?: string | null
     license?: {
         price: string
     }
@@ -149,11 +150,11 @@ export default function PublicProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+            <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
                 <Navbar />
                 <Sidebar />
                 <main className="ml-20 px-8 py-8 flex items-center justify-center min-h-screen">
-                    <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
+                    <Loader2 className="h-8 w-8 animate-spin text-violet-400" />
                 </main>
             </div>
         )
@@ -161,7 +162,7 @@ export default function PublicProfilePage() {
 
     if (!profile) {
         return (
-            <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+            <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
                 <Navbar />
                 <Sidebar />
                 <main className="ml-20 px-8 py-8">
@@ -172,7 +173,7 @@ export default function PublicProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+        <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
             <Navbar />
             <Sidebar />
 
@@ -183,10 +184,10 @@ export default function PublicProfilePage() {
                         {/* Cover Image */}
                         {profile.headerImage ? (
                             <div className="h-64 w-full overflow-hidden">
-                                <img src={profile.headerImage} alt="Header" className="h-full w-full object-cover" />
+                                <img loading="lazy" src={profile.headerImage} alt="Header" className="h-full w-full object-cover" />
                             </div>
                         ) : (
-                            <div className="h-64 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-fuchsia-500 opacity-80" />
+                            <div className="h-64 w-full bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 opacity-80" />
                         )}
 
                         <div className="px-10 pb-10">
@@ -196,11 +197,11 @@ export default function PublicProfilePage() {
                                     <div className="relative -mt-24">
                                         <div className="h-40 w-40 rounded-[2rem] border-4 border-slate-950 bg-slate-900 flex items-center justify-center shadow-2xl overflow-hidden group">
                                             {profile.profileImage ? (
-                                                <img src={profile.profileImage} alt="Profile" className="h-full w-full object-cover" />
+                                                <img loading="lazy" src={profile.profileImage} alt="Profile" className="h-full w-full object-cover" />
                                             ) : (
                                                 <>
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-violet-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                                    <User className="h-20 w-20 text-cyan-200" />
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                                    <User className="h-20 w-20 text-violet-200" />
                                                 </>
                                             )}
                                         </div>
@@ -211,13 +212,13 @@ export default function PublicProfilePage() {
                                     <div className="mt-6">
                                         <div className="flex items-center gap-4 mb-2">
                                             <h1 className="text-4xl font-bold text-white tracking-tight">{profile.name || "Anonymous"}</h1>
-                                            <Badge variant="secondary" className="rounded-full bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-3">
+                                            <Badge variant="secondary" className="rounded-full bg-violet-500/10 text-violet-400 border-violet-500/20 px-3">
                                                 Creator
                                             </Badge>
                                         </div>
 
                                         <div className="flex items-center gap-3 mb-4">
-                                            <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-cyan-200/70">
+                                            <div className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-violet-200/70">
                                                 {shortenAddress(profile.walletAddress)}
                                                 <button onClick={copyAddress} className="hover:text-white transition-colors">
                                                     <Copy className="h-3 w-3" />
@@ -227,50 +228,50 @@ export default function PublicProfilePage() {
                                                 href={`https://basecamp.cloud.blockscout.com/address/${profile.walletAddress}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-cyan-200/70 hover:text-white transition-colors"
+                                                className="flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-3 py-1 text-sm font-mono text-violet-200/70 hover:text-white transition-colors"
                                             >
                                                 <ExternalLink className="h-3 w-3" />
                                                 Basecamp
                                             </a>
                                         </div>
 
-                                        <p className="text-lg text-cyan-100/70 max-w-2xl mb-6 leading-relaxed">{profile.bio || "No bio yet"}</p>
+                                        <p className="text-lg text-violet-100/70 max-w-2xl mb-6 leading-relaxed">{profile.bio || "No bio yet"}</p>
 
                                         <div className="flex items-center gap-6 text-sm font-medium text-muted-foreground flex-wrap">
                                             {profile.website && (
                                                 <div className="flex items-center gap-2">
-                                                    <LinkIcon className="h-4 w-4 text-cyan-400" />
-                                                    <a href={`https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.website}</a>
+                                                    <LinkIcon className="h-4 w-4 text-violet-400" />
+                                                    <a href={`https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.website}</a>
                                                 </div>
                                             )}
                                             {profile.twitter && (
                                                 <div className="flex items-center gap-2">
-                                                    <Twitter className="h-4 w-4 text-cyan-400" />
-                                                    <a href={`https://twitter.com/${profile.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.twitter}</a>
+                                                    <Twitter className="h-4 w-4 text-violet-400" />
+                                                    <a href={`https://twitter.com/${profile.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.twitter}</a>
                                                 </div>
                                             )}
                                             {profile.spotify && (
                                                 <div className="flex items-center gap-2">
                                                     <FaSpotify className="h-4 w-4 text-green-400" />
-                                                    <a href={profile.spotify} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">Spotify</a>
+                                                    <a href={profile.spotify} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">Spotify</a>
                                                 </div>
                                             )}
                                             {profile.youtube && (
                                                 <div className="flex items-center gap-2">
                                                     <Youtube className="h-4 w-4 text-red-400" />
-                                                    <a href={profile.youtube} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">YouTube</a>
+                                                    <a href={profile.youtube} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">YouTube</a>
                                                 </div>
                                             )}
                                             {profile.tiktok && (
                                                 <div className="flex items-center gap-2">
                                                     <FaTiktok className="h-4 w-4 text-white" />
-                                                    <a href={`https://tiktok.com/${profile.tiktok.replace('@', '@')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.tiktok}</a>
+                                                    <a href={`https://tiktok.com/${profile.tiktok.replace('@', '@')}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.tiktok}</a>
                                                 </div>
                                             )}
                                             {profile.instagram && (
                                                 <div className="flex items-center gap-2">
                                                     <Instagram className="h-4 w-4 text-pink-400" />
-                                                    <a href={`https://instagram.com/${profile.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.instagram}</a>
+                                                    <a href={`https://instagram.com/${profile.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.instagram}</a>
                                                 </div>
                                             )}
                                         </div>
@@ -280,12 +281,12 @@ export default function PublicProfilePage() {
                                 <div className="mt-8 flex gap-3">
                                     {isOwnProfile ? (
                                         <Link href="/profile/edit">
-                                            <Button className="h-12 rounded-full bg-white text-slate-950 hover:bg-cyan-50 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105">
+                                            <Button className="h-12 rounded-full bg-white text-slate-950 hover:bg-violet-50 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105">
                                                 Edit Profile
                                             </Button>
                                         </Link>
                                     ) : (
-                                        <Button className="h-12 rounded-full bg-cyan-500 text-white hover:bg-cyan-600 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(6,182,212,0.3)] transition-all hover:scale-105">
+                                        <Button className="h-12 rounded-full bg-violet-600 text-white hover:bg-violet-700 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(124,58,237,0.3)] transition-all hover:scale-105">
                                             Follow
                                         </Button>
                                     )}
@@ -301,11 +302,11 @@ export default function PublicProfilePage() {
                             {profile.stats && (
                                 <div className="grid grid-cols-4 gap-8">
                                     <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                                        <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{profile.stats.uploads}</p>
+                                        <p className="text-3xl font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">{profile.stats.uploads}</p>
                                         <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Uploads</p>
                                     </div>
                                     <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                                        <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{profile.stats.licensesSold}</p>
+                                        <p className="text-3xl font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">{profile.stats.licensesSold}</p>
                                         <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Licenses Sold</p>
                                     </div>
                                     {/* Earnings are private, so we don't show them on public profile */}
@@ -317,35 +318,35 @@ export default function PublicProfilePage() {
                     {/* Content Tabs */}
                     <Tabs defaultValue="uploads" className="space-y-8">
                         <TabsList className="h-14 bg-white/5 border border-white/10 backdrop-blur-md p-1.5 rounded-full w-fit">
-                            <TabsTrigger value="uploads" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Uploads</TabsTrigger>
-                            <TabsTrigger value="licensed" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Licensed Items</TabsTrigger>
-                            <TabsTrigger value="activity" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Activity</TabsTrigger>
+                            <TabsTrigger value="uploads" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Uploads</TabsTrigger>
+                            <TabsTrigger value="licensed" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Licensed Items</TabsTrigger>
+                            <TabsTrigger value="activity" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Activity</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="uploads" className="mt-0">
                             {uploads.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {uploads.map((asset) => (
-                                        <Link href={`/asset/${asset.id}`} key={asset.id}>
-                                            <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
+                                        <Link href={`/asset/${asset.tokenId || asset.id}`} key={asset.id}>
+                                            <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-violet-500/30 hover:shadow-[0_0_30px_-10px_rgba(124,58,237,0.3)]">
                                                 {/* Image */}
                                                 <div className="aspect-[4/3] overflow-hidden">
                                                     <div className="h-full w-full bg-slate-900">
                                                         {asset.thumbnail ? (
-                                                            <img
+                                                            <img loading="lazy"
                                                                 src={asset.thumbnail}
                                                                 alt={asset.name}
                                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                             />
                                                         ) : (
-                                                            <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-violet-500/10">
+                                                            <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-violet-500/10 to-purple-500/10">
                                                                 {typeIcons[asset.type as keyof typeof typeIcons] ? (
                                                                     (() => {
                                                                         const Icon = typeIcons[asset.type as keyof typeof typeIcons]
-                                                                        return <Icon className="h-12 w-12 text-cyan-500/40" />
+                                                                        return <Icon className="h-12 w-12 text-violet-500/40" />
                                                                     })()
                                                                 ) : (
-                                                                    <Sparkles className="h-12 w-12 text-cyan-500/40" />
+                                                                    <Sparkles className="h-12 w-12 text-violet-500/40" />
                                                                 )}
                                                             </div>
                                                         )}
@@ -375,7 +376,7 @@ export default function PublicProfilePage() {
                                                                 variant="outline"
                                                                 className={
                                                                     asset.license
-                                                                        ? 'border-white/10 bg-white/5 text-xs text-cyan-300'
+                                                                        ? 'border-white/10 bg-white/5 text-xs text-violet-300'
                                                                         : 'border-white/10 bg-yellow-700/50 text-xs text-yellow-400'
                                                                 }
                                                             >
@@ -406,26 +407,26 @@ export default function PublicProfilePage() {
                             {licensedItems.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                     {licensedItems.map((asset) => (
-                                        <Link href={`/asset/${asset.id}`} key={asset.id}>
-                                            <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
+                                        <Link href={`/asset/${asset.tokenId || asset.id}`} key={asset.id}>
+                                            <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-violet-500/30 hover:shadow-[0_0_30px_-10px_rgba(124,58,237,0.3)]">
                                                 {/* Image */}
                                                 <div className="aspect-[4/3] overflow-hidden">
                                                     <div className="h-full w-full bg-slate-900">
                                                         {asset.thumbnail ? (
-                                                            <img
+                                                            <img loading="lazy"
                                                                 src={asset.thumbnail}
                                                                 alt={asset.name}
                                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                                                             />
                                                         ) : (
-                                                            <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-violet-500/10">
+                                                            <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-violet-500/10 to-purple-500/10">
                                                                 {typeIcons[asset.type as keyof typeof typeIcons] ? (
                                                                     (() => {
                                                                         const Icon = typeIcons[asset.type as keyof typeof typeIcons]
-                                                                        return <Icon className="h-12 w-12 text-cyan-500/40" />
+                                                                        return <Icon className="h-12 w-12 text-violet-500/40" />
                                                                     })()
                                                                 ) : (
-                                                                    <Sparkles className="h-12 w-12 text-cyan-500/40" />
+                                                                    <Sparkles className="h-12 w-12 text-violet-500/40" />
                                                                 )}
                                                             </div>
                                                         )}
@@ -451,7 +452,7 @@ export default function PublicProfilePage() {
 
                                                     <div className="flex items-center justify-between">
                                                         <div className="flex items-center gap-2">
-                                                            <Badge variant="outline" className="border-white/10 bg-white/5 text-xs text-cyan-300">
+                                                            <Badge variant="outline" className="border-white/10 bg-white/5 text-xs text-violet-300">
                                                                 Licensed
                                                             </Badge>
                                                         </div>
@@ -481,7 +482,7 @@ export default function PublicProfilePage() {
                                     {activity.map((item) => (
                                         <div key={item.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
                                             <div className="flex items-center gap-4">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400">
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-500/10 text-violet-400">
                                                     {item.transactionType === 'bought' ? <Sparkles className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
                                                 </div>
                                                 <div>

@@ -27,7 +27,7 @@ export default function ContentCard({ title, description, image, price, type = "
       <div className="aspect-[4/3] overflow-hidden">
         <div className="h-full w-full bg-slate-900">
           {image && image !== "/placeholder.png" ? (
-            <img
+            <img loading="lazy"
               src={image}
               alt={title}
               className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"

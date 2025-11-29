@@ -61,13 +61,14 @@ export function AssetCard({ asset, showBiddingStatus = true }: AssetCardProps) {
     const timeRemaining = getTimeRemaining()
 
     return (
-        <Link href={`/asset/${asset.id}`}>
+        <Link href={`/asset/${asset.tokenId || asset.id}`}>
             <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
                 {/* Image */}
                 <div className="aspect-[4/3] overflow-hidden relative">
                     <div className="h-full w-full bg-slate-900">
                         {asset.thumbnail ? (
                             <img
+                                loading="lazy"
                                 src={asset.thumbnail}
                                 alt={asset.name}
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -102,8 +103,8 @@ export function AssetCard({ asset, showBiddingStatus = true }: AssetCardProps) {
                             <Badge
                                 variant="secondary"
                                 className={`backdrop-blur-md border ${isAuctionActive
-                                        ? 'bg-green-500/20 border-green-500/50 text-green-300'
-                                        : 'bg-red-500/20 border-red-500/50 text-red-300'
+                                    ? 'bg-green-500/20 border-green-500/50 text-green-300'
+                                    : 'bg-red-500/20 border-red-500/50 text-red-300'
                                     }`}
                             >
                                 {isAuctionActive ? '🔴 Live Auction' : 'Auction Ended'}

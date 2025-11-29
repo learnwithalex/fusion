@@ -15,9 +15,16 @@ import {
     Vote,
     CheckCircle2,
     Clock,
-    XCircle
+    XCircle,
+    Wallet,
+    ArrowRight,
+    ArrowUpRight,
+    MessageSquare,
+    Shield,
+    Zap
 } from 'lucide-react'
 import { useState, useEffect } from "react"
+import { PageLoader } from "@/components/page-loader"
 
 interface ProtocolStats {
     totalAssets: number
@@ -36,9 +43,36 @@ interface Proposal {
     endsAt: string
 }
 
+interface TreasuryAsset {
+    symbol: string
+    name: string
+    amount: number
+    value: number
+    color: string
+}
+
+interface ActivityEvent {
+    id: number
+    type: "proposal" | "vote" | "treasury" | "system"
+    title: string
+    description: string
+    timestamp: string
+}
+
+interface Delegate {
+    id: number
+    name: string
+    address: string
+    votingPower: number
+    proposalsVoted: number
+}
+
 export default function AnalyticsPage() {
     const [stats, setStats] = useState<ProtocolStats | null>(null)
     const [proposals, setProposals] = useState<Proposal[]>([])
+    const [treasuryAssets, setTreasuryAssets] = useState<TreasuryAsset[]>([])
+    const [recentActivity, setRecentActivity] = useState<ActivityEvent[]>([])
+    const [delegates, setDelegates] = useState<Delegate[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -47,15 +81,14 @@ export default function AnalyticsPage() {
 
     const fetchData = async () => {
         try {
-            // TODO: Replace with actual API endpoints
-            // Mock data for now
-            setStats({
-                totalAssets: 1247,
-                totalUsers: 892,
-                totalTransactions: 3456,
-                totalVolume: "45,678.90",
-            })
+            // Fetch Protocol Stats
+            const statsRes = await fetch('http://localhost:3001/stats')
+            if (statsRes.ok) {
+                const statsData = await statsRes.json()
+                setStats(statsData)
+            }
 
+            // Mock data for other sections
             setProposals([
                 {
                     id: 1,
@@ -85,6 +118,26 @@ export default function AnalyticsPage() {
                     endsAt: "2024-11-20"
                 },
             ])
+
+            setTreasuryAssets([
+                { symbol: "ETH", name: "Ethereum", amount: 120.5, value: 245000, color: "bg-blue-500" },
+                { symbol: "USDC", name: "USD Coin", amount: 150000, value: 150000, color: "bg-green-500" },
+                { symbol: "FUSION", name: "Fusion", amount: 500000, value: 125000, color: "bg-violet-500" },
+            ])
+
+            setRecentActivity([
+                { id: 1, type: "proposal", title: "New Proposal Created", description: "Reduce Platform Fee to 2%", timestamp: "2 hours ago" },
+                { id: 2, type: "vote", title: "Large Vote Cast", description: "0x123...abc voted For on Proposal #42", timestamp: "5 hours ago" },
+                { id: 3, type: "treasury", title: "Treasury Deposit", description: "+50 ETH from Protocol Fees", timestamp: "1 day ago" },
+                { id: 4, type: "system", title: "Protocol Upgrade", description: "v2.1.0 deployed successfully", timestamp: "2 days ago" },
+            ])
+
+            setDelegates([
+                { id: 1, name: "Alice.eth", address: "0x71C...9A21", votingPower: 45000, proposalsVoted: 12 },
+                { id: 2, name: "Bob.eth", address: "0x32D...4B12", votingPower: 32000, proposalsVoted: 10 },
+                { id: 3, name: "Charlie", address: "0x98E...1C23", votingPower: 28000, proposalsVoted: 8 },
+            ])
+
         } catch (error) {
             console.error("Failed to fetch data:", error)
         } finally {
@@ -102,8 +155,8 @@ export default function AnalyticsPage() {
                         {suffix && <span className="text-sm text-muted-foreground ml-1">{suffix}</span>}
                     </p>
                 </div>
-                <div className="rounded-xl bg-gradient-to-br from-cyan-500/10 to-violet-500/10 p-2.5">
-                    <Icon className="h-5 w-5 text-cyan-400" />
+                <div className="rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 p-2.5">
+                    <Icon className="h-5 w-5 text-violet-400" />
                 </div>
             </div>
         </Card>
@@ -165,26 +218,36 @@ export default function AnalyticsPage() {
         )
     }
 
+    if (loading) {
+        return <PageLoader />
+    }
+
     return (
-        <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+        <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
             <Navbar />
             <Sidebar />
 
             <main className="ml-20 px-8 py-8">
                 <div className="mx-auto max-w-[1600px]">
                     {/* Header */}
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Protocol Overview</h1>
-                        <p className="text-sm text-muted-foreground">Statistics and governance for the Fusion protocol</p>
+                    <div className="mb-6 flex items-end justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Protocol Overview</h1>
+                            <p className="text-sm text-muted-foreground">Statistics and governance for the Fusion protocol</p>
+                        </div>
+                        <Button className="gap-2 rounded-xl bg-white/5 text-white hover:bg-white/10 border border-white/10">
+                            <ArrowUpRight className="h-4 w-4" />
+                            View Contract
+                        </Button>
                     </div>
 
                     <Tabs defaultValue="stats" className="space-y-6">
                         <TabsList className="h-11 bg-white/5 border border-white/10 backdrop-blur-md p-1 rounded-2xl w-fit">
-                            <TabsTrigger value="stats" className="h-9 rounded-xl px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white">
+                            <TabsTrigger value="stats" className="h-9 rounded-xl px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
                                 <Activity className="h-4 w-4 mr-2" />
                                 Statistics
                             </TabsTrigger>
-                            <TabsTrigger value="dao" className="h-9 rounded-xl px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white">
+                            <TabsTrigger value="dao" className="h-9 rounded-xl px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white">
                                 <Vote className="h-4 w-4 mr-2" />
                                 DAO Governance
                             </TabsTrigger>
@@ -216,25 +279,113 @@ export default function AnalyticsPage() {
                                 />
                             </div>
 
-                            {/* Charts Placeholder */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-                                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                                        <TrendingUp className="h-4 w-4 text-cyan-400" />
-                                        Asset Growth
-                                    </h3>
-                                    <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
-                                        Chart coming soon
+                            {/* Treasury Overview */}
+                            <Card className="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-md">
+                                <div className="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between mb-8">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div className="p-2 rounded-lg bg-violet-500/10">
+                                                <Wallet className="h-5 w-5 text-violet-400" />
+                                            </div>
+                                            <h2 className="text-xl font-bold text-white">Treasury Overview</h2>
+                                        </div>
+                                        <p className="text-muted-foreground">Total value locked in protocol treasury</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-3xl font-bold text-white">$520,000.00</p>
+                                        <p className="text-sm text-green-400 flex items-center justify-end gap-1">
+                                            <TrendingUp className="h-3 w-3" />
+                                            +12.5% this month
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {treasuryAssets.map((asset) => (
+                                        <div key={asset.symbol} className="space-y-2">
+                                            <div className="flex items-center justify-between text-sm">
+                                                <div className="flex items-center gap-2">
+                                                    <div className={`h-2 w-2 rounded-full ${asset.color}`} />
+                                                    <span className="font-medium text-white">{asset.name}</span>
+                                                    <span className="text-muted-foreground">({asset.symbol})</span>
+                                                </div>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-white font-mono">{asset.amount.toLocaleString()} {asset.symbol}</span>
+                                                    <span className="text-muted-foreground w-24 text-right">${asset.value.toLocaleString()}</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                                <div className={`h-full ${asset.color} rounded-full`} style={{ width: `${(asset.value / 520000) * 100}%` }} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Recent Activity */}
+                                <Card className="lg:col-span-2 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Zap className="h-5 w-5 text-violet-400" />
+                                            Recent Activity
+                                        </h3>
+                                        <Button variant="ghost" size="sm" className="text-violet-400 hover:text-violet-300">View All</Button>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {recentActivity.map((activity) => (
+                                            <div key={activity.id} className="flex items-start gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                                                <div className={`mt-1 p-2 rounded-full ${activity.type === 'proposal' ? 'bg-blue-500/10 text-blue-400' :
+                                                    activity.type === 'vote' ? 'bg-green-500/10 text-green-400' :
+                                                        activity.type === 'treasury' ? 'bg-yellow-500/10 text-yellow-400' :
+                                                            'bg-violet-500/10 text-violet-400'
+                                                    }`}>
+                                                    {activity.type === 'proposal' && <FileText className="h-4 w-4" />}
+                                                    {activity.type === 'vote' && <Vote className="h-4 w-4" />}
+                                                    {activity.type === 'treasury' && <DollarSign className="h-4 w-4" />}
+                                                    {activity.type === 'system' && <Activity className="h-4 w-4" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <p className="font-medium text-white">{activity.title}</p>
+                                                        <span className="text-xs text-muted-foreground">{activity.timestamp}</span>
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">{activity.description}</p>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </Card>
 
-                                <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
-                                    <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                                        <DollarSign className="h-4 w-4 text-cyan-400" />
-                                        Volume Trends
-                                    </h3>
-                                    <div className="h-48 flex items-center justify-center text-sm text-muted-foreground">
-                                        Chart coming soon
+                                {/* Top Delegates */}
+                                <Card className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                            <Shield className="h-5 w-5 text-violet-400" />
+                                            Top Delegates
+                                        </h3>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {delegates.map((delegate, idx) => (
+                                            <div key={delegate.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white">
+                                                        {idx + 1}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-white">{delegate.name}</p>
+                                                        <p className="text-xs text-muted-foreground">{delegate.address}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-bold text-white">{delegate.votingPower.toLocaleString()}</p>
+                                                    <p className="text-xs text-muted-foreground">Votes</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <Button className="w-full mt-4 bg-white/5 hover:bg-white/10 text-white border border-white/10">
+                                            View All Delegates
+                                        </Button>
                                     </div>
                                 </Card>
                             </div>
@@ -243,11 +394,11 @@ export default function AnalyticsPage() {
                         <TabsContent value="dao" className="space-y-6">
                             <div className="relative min-h-[600px]">
                                 {/* Coming Soon Overlay */}
-                                <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-sm bg-slate-950/60 rounded-3xl">
-                                    <Card className="max-w-2xl mx-4 rounded-3xl border border-white/10 bg-slate-900/90 p-8 backdrop-blur-md shadow-2xl">
+                                <div className="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-sm bg-black/60 rounded-3xl">
+                                    <Card className="max-w-2xl mx-4 rounded-3xl border border-white/10 bg-black/90 p-8 backdrop-blur-md shadow-2xl">
                                         <div className="text-center">
-                                            <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-violet-500/20 flex items-center justify-center">
-                                                <Vote className="h-8 w-8 text-cyan-400" />
+                                            <div className="mx-auto mb-6 h-16 w-16 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
+                                                <Vote className="h-8 w-8 text-violet-400" />
                                             </div>
 
                                             <h2 className="text-2xl font-bold text-white mb-3">DAO Governance Coming Soon</h2>
@@ -258,7 +409,7 @@ export default function AnalyticsPage() {
                                             <div className="space-y-4 text-left mb-6">
                                                 <div className="rounded-xl bg-white/5 border border-white/10 p-4">
                                                     <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                                        <Vote className="h-4 w-4 text-cyan-400" />
+                                                        <Vote className="h-4 w-4 text-violet-400" />
                                                         Token-Based Voting
                                                     </h3>
                                                     <p className="text-sm text-muted-foreground">
@@ -268,7 +419,7 @@ export default function AnalyticsPage() {
 
                                                 <div className="rounded-xl bg-white/5 border border-white/10 p-4">
                                                     <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                                        <DollarSign className="h-4 w-4 text-cyan-400" />
+                                                        <DollarSign className="h-4 w-4 text-violet-400" />
                                                         Platform Fee Sharing
                                                     </h3>
                                                     <p className="text-sm text-muted-foreground">
@@ -278,7 +429,7 @@ export default function AnalyticsPage() {
 
                                                 <div className="rounded-xl bg-white/5 border border-white/10 p-4">
                                                     <h3 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                                                        <Users className="h-4 w-4 text-cyan-400" />
+                                                        <Users className="h-4 w-4 text-violet-400" />
                                                         Community Proposals
                                                     </h3>
                                                     <p className="text-sm text-muted-foreground">
@@ -287,7 +438,7 @@ export default function AnalyticsPage() {
                                                 </div>
                                             </div>
 
-                                            <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 px-4 py-1.5">
+                                            <Badge className="bg-violet-500/10 text-violet-400 border-violet-500/20 px-4 py-1.5">
                                                 <Clock className="h-3 w-3 mr-1.5" />
                                                 Launching Q1 2025
                                             </Badge>
@@ -302,7 +453,7 @@ export default function AnalyticsPage() {
                                             <h2 className="text-lg font-bold text-white">Active Proposals</h2>
                                             <p className="text-sm text-muted-foreground">Vote on protocol improvements and changes</p>
                                         </div>
-                                        <Button className="h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-violet-500">
+                                        <Button className="h-10 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500">
                                             <Vote className="h-4 w-4 mr-2" />
                                             Create Proposal
                                         </Button>

@@ -140,7 +140,7 @@ router.get("/me/sales", authenticate, async (req, res) => {
             assetName: assets.name,
             buyerAddress: transactions.userAddress,
             amount: transactions.amount,
-            transactionHash: transactions.transactionHash,
+            transactionHash: transactions.tnxhash,
             createdAt: transactions.createdAt
         })
             .from(transactions)
@@ -176,7 +176,7 @@ router.get("/me/activity", authenticate, async (req, res) => {
             amount: transactions.amount,
             from: sql<string>`COALESCE(${assets.userId}::text, 'system')`,
             to: transactions.userAddress,
-            transactionHash: transactions.transactionHash,
+            transactionHash: transactions.tnxhash,
             blockNumber: sql<number>`0`, // Add when you have this field
             status: transactions.status,
             createdAt: transactions.createdAt
@@ -302,7 +302,11 @@ router.delete("/:id/follow", async (req, res) => {
 router.get("/:id/assets/created", async (req, res) => {
     const { id } = req.params;
     try {
-        const userAssets = await db.select().from(assets).where(eq(assets.userId, parseInt(id)));
+        const userAssets = await db.select().from(assets)
+            .where(and(
+                eq(assets.userId, parseInt(id)),
+                eq(assets.creationStatus, "live") // Only show live assets
+            ));
         res.json(userAssets);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch created assets" });

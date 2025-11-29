@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react'
 import { useAuth, useAuthState } from "@campnetwork/origin/react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
+import { PageLoader } from "@/components/page-loader"
 import { Loader2, Check } from "lucide-react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { toast } from 'sonner'
@@ -77,6 +78,7 @@ interface Asset {
   remixParent?: {
     id: number
     name: string
+    tokenId?: string | null
   }
   // Bidding fields
   biddingEnabled?: boolean
@@ -622,16 +624,12 @@ export default function AssetDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
-      </div>
-    )
+    return <PageLoader message="Loading asset..." />
   }
 
   if (!asset) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
+      <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20 flex items-center justify-center text-white">
         Asset not found
       </div>
     )
@@ -640,7 +638,7 @@ export default function AssetDetailPage() {
   const TypeIcon = typeIcons[(asset.type || "Music") as keyof typeof typeIcons] || Music
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
       <Navbar />
       <Sidebar />
 
@@ -649,7 +647,7 @@ export default function AssetDetailPage() {
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* Left Column - Asset Preview */}
             <div className="lg:col-span-2 space-y-6">
-              <Card className="overflow-hidden rounded-3xl border-border/10 bg-card/30 backdrop-blur-sm">
+              <Card className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md shadow-2xl">
                 <div className="relative aspect-video overflow-hidden bg-black">
                   {asset.video ? (
                     <video
@@ -659,7 +657,7 @@ export default function AssetDetailPage() {
                       poster={asset.thumbnail || undefined}
                     />
                   ) : (
-                    <img
+                    <img loading="lazy"
                       src={asset.thumbnail || "/placeholder.svg"}
                       alt={asset.name}
                       className="h-full w-full object-cover"
@@ -676,13 +674,13 @@ export default function AssetDetailPage() {
               </Card>
 
               {/* Description */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+              <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                 <h2 className="mb-4 text-xl font-semibold">Description</h2>
                 <p className="text-muted-foreground leading-relaxed">{asset.description || "No description provided."}</p>
               </Card>
 
               {/* Metadata */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+              <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                 <h2 className="mb-4 text-xl font-semibold">Metadata</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-start gap-3">
@@ -714,7 +712,7 @@ export default function AssetDetailPage() {
               </Card>
 
               {/* Ownership */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+              <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                 <h2 className="mb-4 text-xl font-semibold">Ownership</h2>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -729,7 +727,7 @@ export default function AssetDetailPage() {
                       <Copy className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Separator className="bg-border/10" />
+                  <Separator className="bg-white/10" />
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <User className="h-5 w-5 text-muted-foreground" />
@@ -746,11 +744,11 @@ export default function AssetDetailPage() {
               </Card>
 
               {/* Derivative Lineage */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+              <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Derivative Works</h2>
                   {asset.derivatives && asset.derivatives.length > 0 && (
-                    <Link href={`/asset/${asset.id}/derivatives`}>
+                    <Link href={`/asset/${asset.tokenId || asset.id}/derivatives`}>
                       <Button variant="ghost" size="sm" className="text-xs">
                         View More
                       </Button>
@@ -761,14 +759,14 @@ export default function AssetDetailPage() {
                   <div className="grid grid-cols-2 gap-4">
                     {asset.derivatives.map((derivative) => (
                       <Link key={derivative.id} href={`/asset/${derivative.id}`}>
-                        <div className="group relative overflow-hidden rounded-xl border border-border/10 bg-muted/20 hover:border-cyan-500/50 transition-colors">
-                          <img
+                        <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 hover:border-violet-500/50 transition-colors">
+                          <img loading="lazy"
                             src={derivative.thumbnail || "/placeholder.svg"}
                             alt={derivative.name}
                             className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
                           />
                           <div className="p-3">
-                            <p className="font-medium text-sm truncate group-hover:text-cyan-400 transition-colors">{derivative.name}</p>
+                            <p className="font-medium text-sm truncate group-hover:text-violet-400 transition-colors">{derivative.name}</p>
                             <p className="font-mono text-xs text-muted-foreground">
                               {derivative.creator.name || derivative.creator.walletAddress.slice(0, 6)}
                             </p>
@@ -783,14 +781,14 @@ export default function AssetDetailPage() {
               </Card>
 
               {/* Activity Feed */}
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm">
+              <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
                 <h2 className="mb-4 text-xl font-semibold">Activity</h2>
                 <div className="space-y-3">
                   {asset.activity && asset.activity.length > 0 ? (
                     asset.activity.map((activity, index) => (
-                      <div key={index} className="flex items-center justify-between rounded-lg bg-muted/20 p-3">
+                      <div key={index} className="flex items-center justify-between rounded-lg bg-white/5 p-3 border border-white/5">
                         <div className="flex items-center gap-3">
-                          <TrendingUp className="h-4 w-4 text-blue-400" />
+                          <TrendingUp className="h-4 w-4 text-violet-400" />
                           <div>
                             <p className="font-medium text-sm capitalize">{activity.type}</p>
                             <p className="font-mono text-xs text-muted-foreground">
@@ -815,13 +813,13 @@ export default function AssetDetailPage() {
 
             {/* Right Column - License Info & Actions */}
             <div className="space-y-6">
-              <Card className="rounded-2xl border-border/10 bg-card/30 p-6 backdrop-blur-sm sticky top-24">
+              <Card className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-md sticky top-24">
                 <div className="mb-6">
                   {asset.remixParent && (
                     <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
                       <GitFork className="h-3 w-3" />
                       <span>Remix of</span>
-                      <Link href={`/asset/${asset.remixParent.id}`} className="font-medium text-cyan-400 hover:underline">
+                      <Link href={`/asset/${asset.remixParent.tokenId || asset.remixParent.id}`} className="font-medium text-violet-400 hover:underline">
                         {asset.remixParent.name}
                       </Link>
                     </div>
@@ -856,7 +854,7 @@ export default function AssetDetailPage() {
                       <TrendingUp className="h-4 w-4" />
                       <span className="text-sm">Royalty</span>
                     </div>
-                    <p className="text-lg font-bold text-blue-400">
+                    <p className="text-lg font-bold text-violet-400">
                       {asset.license ? `${asset.license.royalty}%` : "0%"}
                     </p>
                   </div>
@@ -883,48 +881,69 @@ export default function AssetDetailPage() {
                 <Separator className="my-6 bg-border/10" />
 
                 {/* Action Buttons */}
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Winner Acceptance Flow */}
                   {asset.biddingEnabled &&
                     asset.biddingStatus === 'completed' &&
                     asset.biddingWinnerId === currentUserId &&
                     !asset.ownershipAccepted && (
-                      <Card className="p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/20">
-                        <div className="space-y-4">
-                          <div className="flex items-center gap-3">
-                            <div className="p-3 rounded-full bg-green-500/20">
-                              <Trophy className="h-6 w-6 text-green-400" />
+                      <Card className="p-6 bg-gradient-to-br from-green-500/20 via-emerald-500/10 to-green-900/20 border-green-500/30 shadow-[0_0_30px_-10px_rgba(34,197,94,0.3)]">
+                        <div className="space-y-6">
+                          <div className="flex items-center gap-4">
+                            <div className="p-4 rounded-full bg-green-500/20 border border-green-500/30 shadow-inner">
+                              <Trophy className="h-8 w-8 text-green-400" />
                             </div>
                             <div>
-                              <h3 className="text-xl font-bold text-green-400">Congratulations!</h3>
-                              <p className="text-sm text-muted-foreground">You won this auction!</p>
+                              <h3 className="text-2xl font-bold text-green-400">You Won!</h3>
+                              <p className="text-sm text-green-200/70">The auction has ended and you are the highest bidder.</p>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            Click below to accept ownership and transfer the NFT to your wallet.
-                          </p>
+                          <div className="bg-black/20 rounded-xl p-4 border border-green-500/10">
+                            <p className="text-sm text-green-100/80 mb-2">Next Step:</p>
+                            <p className="text-sm font-medium text-white">
+                              Accept ownership to transfer the NFT to your wallet.
+                            </p>
+                          </div>
                           <Button
                             onClick={handleAcceptOwnership}
                             disabled={isAcceptingOwnership}
-                            className="w-full gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                            size="lg"
+                            className="w-full h-14 text-lg font-bold gap-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 shadow-lg shadow-green-500/20 transition-all hover:scale-[1.02]"
                           >
-                            {isAcceptingOwnership ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                            Accept Ownership & Transfer NFT
+                            {isAcceptingOwnership ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" />}
+                            Claim Your NFT
                           </Button>
                         </div>
                       </Card>
                     )}
 
                   {hasAccess ? (
-                    <>
+                    <div className="space-y-4 p-4 rounded-2xl bg-violet-500/5 border border-violet-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 hover:bg-violet-500/30">
+                          <Check className="w-3 h-3 mr-1" /> License Owned
+                        </Badge>
+                      </div>
                       <Button
-                        className="w-full gap-2 rounded-full bg-green-600 hover:bg-green-700"
-                        size="lg"
+                        className="w-full h-14 text-lg font-bold gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/25 transition-all hover:scale-[1.02]"
                         onClick={() => window.open(downloadUrl || asset.fileUrl || asset.video || asset.thumbnail || "", '_blank')}
                       >
-                        <Download className="h-4 w-4" />
+                        <Download className="h-5 w-5" />
                         Download Asset
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        className="w-full h-12 gap-2 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 hover:text-white transition-colors"
+                        onClick={() => {
+                          if (asset?.id && asset?.tokenId) {
+                            localStorage.setItem('toRemixId', asset.id.toString())
+                            localStorage.setItem('toRemixTokenId', asset.tokenId)
+                            router.push('/upload')
+                          }
+                        }}
+                      >
+                        <GitFork className="h-4 w-4" />
+                        Remix Derivative
                       </Button>
 
                       {/* Deletion Option (after download) */}
@@ -932,28 +951,29 @@ export default function AssetDetailPage() {
                         asset.ownershipAccepted &&
                         !asset.deletionRequested &&
                         asset.biddingWinnerId === currentUserId && (
-                          <Button
-                            onClick={handleRequestDeletion}
-                            disabled={isRequestingDeletion}
-                            variant="destructive"
-                            className="w-full gap-2"
-                            size="lg"
-                          >
-                            {isRequestingDeletion ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                            Delete On-Chain (Permanent)
-                          </Button>
+                          <div className="pt-4 mt-4 border-t border-white/10">
+                            <Button
+                              onClick={handleRequestDeletion}
+                              disabled={isRequestingDeletion}
+                              variant="destructive"
+                              className="w-full gap-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                            >
+                              {isRequestingDeletion ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              Delete On-Chain (Permanent)
+                            </Button>
+                          </div>
                         )}
-                    </>
+                    </div>
                   ) : asset.biddingEnabled ? (
                     // Bidding UI
                     <div className="space-y-4">
                       {/* Auction Status Badge */}
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+                      <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10">
                         <div>
                           <p className="text-sm text-muted-foreground">Auction Status</p>
-                          <p className="text-lg font-semibold text-yellow-400">
+                          <p className="text-lg font-semibold text-white">
                             {asset.biddingStatus === 'pending' && 'Awaiting First Bid'}
-                            {asset.biddingStatus === 'active' && 'Live Auction'}
+                            {asset.biddingStatus === 'active' && <span className="text-violet-400 animate-pulse">Live Auction</span>}
                             {asset.biddingStatus === 'ended' && 'Auction Ended'}
                             {asset.biddingStatus === 'completed' && 'Completed'}
                           </p>
@@ -961,21 +981,25 @@ export default function AssetDetailPage() {
                         {timeRemaining && asset.biddingStatus === 'active' && (
                           <div className="text-right">
                             <p className="text-sm text-muted-foreground">Time Remaining</p>
-                            <p className="text-lg font-bold text-cyan-400">{timeRemaining}</p>
+                            <p className="text-lg font-bold text-violet-400 font-mono">{timeRemaining}</p>
                           </div>
                         )}
                       </div>
 
                       {/* Current Bid / Starting Price */}
-                      <div className="p-4 rounded-lg bg-card/30 border border-border/20">
-                        <p className="text-sm text-muted-foreground mb-1">
+                      <div className="p-5 rounded-xl bg-gradient-to-br from-violet-900/20 to-purple-900/20 border border-violet-500/20">
+                        <p className="text-sm text-violet-200/70 mb-1">
                           {bids.length > 0 ? 'Current Highest Bid' : 'Starting Bid'}
                         </p>
-                        <p className="text-2xl font-bold text-white">
-                          {bids.length > 0 ? bids[0].bid.amount : asset.biddingStartPrice} CAMP
-                        </p>
+                        <div className="flex items-baseline gap-2">
+                          <p className="text-3xl font-bold text-white">
+                            {bids.length > 0 ? bids[0].bid.amount : asset.biddingStartPrice}
+                          </p>
+                          <span className="text-violet-400 font-medium">CAMP</span>
+                        </div>
                         {bids.length > 0 && bids[0].user && (
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-violet-300/50 mt-2 flex items-center gap-1">
+                            <User className="w-3 h-3" />
                             by {bids[0].user.name || bids[0].user.walletAddress.slice(0, 6) + '...' + bids[0].user.walletAddress.slice(-4)}
                           </p>
                         )}
@@ -983,9 +1007,9 @@ export default function AssetDetailPage() {
 
                       {/* Place Bid (if auction is active or pending) */}
                       {(asset.biddingStatus === 'pending' || asset.biddingStatus === 'active') && (
-                        <div className="space-y-2">
-                          <Label htmlFor="bid-amount">Your Bid (CAMP)</Label>
-                          <div className="flex gap-2">
+                        <div className="space-y-3 pt-2">
+                          <Label htmlFor="bid-amount" className="text-white">Your Bid (CAMP)</Label>
+                          <div className="flex gap-3">
                             <Input
                               id="bid-amount"
                               type="number"
@@ -993,32 +1017,34 @@ export default function AssetDetailPage() {
                               placeholder={`Min: ${bids.length > 0 ? (parseFloat(bids[0].bid.amount) + 0.01).toFixed(2) : asset.biddingStartPrice || "0"}`}
                               value={bidAmount}
                               onChange={(e) => setBidAmount(e.target.value)}
-                              className="bg-muted/30 border-border/20"
+                              className="h-12 bg-white/5 border-white/10 focus:border-violet-500/50 focus:ring-violet-500/20 text-lg"
                             />
                             <Button
                               onClick={handlePlaceBid}
                               disabled={isPlacingBid || !bidAmount || (bids.length > 0 && bids[0].user?.walletAddress.toLowerCase() === walletAddress?.toLowerCase())}
-                              className="gap-2 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700"
+                              className="h-12 px-6 gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/20"
                             >
                               {isPlacingBid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gavel className="h-4 w-4" />}
                               Place Bid
                             </Button>
                           </div>
                           {bids.length > 0 && bids[0].user?.walletAddress.toLowerCase() === walletAddress?.toLowerCase() && (
-                            <p className="text-xs text-yellow-400">You are the current highest bidder</p>
+                            <p className="text-xs text-green-400 flex items-center gap-1">
+                              <Check className="w-3 h-3" /> You are the current highest bidder
+                            </p>
                           )}
                         </div>
                       )}
 
                       {/* Bid History */}
                       {bids.length > 0 && (
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-semibold">Bid History</h4>
-                          <div className="max-h-48 overflow-y-auto space-y-2">
+                        <div className="space-y-3 pt-4 border-t border-white/10">
+                          <h4 className="text-sm font-semibold text-white">Bid History</h4>
+                          <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                             {bids.map((bid, idx) => (
-                              <div key={bid.bid.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-border/10">
+                              <div key={bid.bid.id} className="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                                 <div>
-                                  <p className="text-sm font-medium">{bid.bid.amount} CAMP</p>
+                                  <p className="text-sm font-medium text-white">{bid.bid.amount} CAMP</p>
                                   <p className="text-xs text-muted-foreground">
                                     {bid.user?.name || bid.user?.walletAddress.slice(0, 6) + '...' + bid.user?.walletAddress.slice(-4)}
                                   </p>
@@ -1028,10 +1054,10 @@ export default function AssetDetailPage() {
                                     {new Date(bid.bid.createdAt).toLocaleString()}
                                   </p>
                                   {idx === 0 && bid.bid.status === 'active' && (
-                                    <span className="text-xs text-green-400">Leading</span>
+                                    <span className="text-xs text-green-400 font-medium bg-green-400/10 px-2 py-0.5 rounded-full">Leading</span>
                                   )}
                                   {bid.bid.status === 'outbid' && (
-                                    <span className="text-xs text-red-400">Outbid</span>
+                                    <span className="text-xs text-red-400 font-medium bg-red-400/10 px-2 py-0.5 rounded-full">Outbid</span>
                                   )}
                                 </div>
                               </div>
@@ -1045,7 +1071,7 @@ export default function AssetDetailPage() {
                         <Button
                           onClick={handleClaimRefund}
                           disabled={isClaimingRefund}
-                          className="w-full gap-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+                          className="w-full gap-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg shadow-orange-500/20"
                           size="lg"
                         >
                           {isClaimingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : <Coins className="h-4 w-4" />}
@@ -1055,36 +1081,19 @@ export default function AssetDetailPage() {
                     </div>
                   ) : (
                     <Button
-                      className="w-full gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                      size="lg"
+                      className="w-full h-14 text-lg font-bold gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/25 transition-all hover:scale-[1.02]"
                       onClick={handleBuy}
                       disabled={isBuying || !asset.license}
                     >
-                      {isBuying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+                      {isBuying ? <Loader2 className="h-5 w-5 animate-spin" /> : <Shield className="h-5 w-5" />}
                       Buy Access
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2 rounded-full border-border/20"
-                    size="lg"
-                    disabled={!hasAccess}
-                    onClick={() => {
-                      if (asset?.id && asset?.tokenId) {
-                        localStorage.setItem('toRemixId', asset.id.toString())
-                        localStorage.setItem('toRemixTokenId', asset.tokenId)
-                        router.push('/upload')
-                      }
-                    }}
-                  >
-                    <GitFork className="h-4 w-4" />
-                    Remix Derivative
-                  </Button>
                 </div>
 
                 <Separator className="my-6 bg-border/10" />
 
-                <div className="mt-4 rounded-lg bg-muted/20 p-3">
+                <div className="mt-4 rounded-lg bg-white/5 p-3 border border-white/5">
                   <div className="flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">Token ID</p>
                     <div className="flex items-center gap-2">

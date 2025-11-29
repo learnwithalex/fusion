@@ -8,6 +8,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import ContentCard from "@/components/ContentCard"
 import Link from "next/link"
+import { PageLoader } from "@/components/page-loader"
 
 interface Asset {
     id: number
@@ -19,6 +20,7 @@ interface Asset {
         price: string
     } | null
     createdAt: string
+    tokenId?: string | null
 }
 
 export default function DerivativesPage() {
@@ -59,15 +61,11 @@ export default function DerivativesPage() {
     }, [id])
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
-            </div>
-        )
+        return <PageLoader />
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
             <Navbar />
             <Sidebar />
 
@@ -76,7 +74,7 @@ export default function DerivativesPage() {
                     <div className="mb-8">
                         <Button
                             variant="ghost"
-                            className="mb-4 gap-2 pl-0 hover:bg-transparent hover:text-cyan-400"
+                            className="mb-4 gap-2 pl-0 hover:bg-transparent hover:text-violet-400"
                             onClick={() => router.back()}
                         >
                             <ArrowLeft className="h-4 w-4" />
@@ -86,7 +84,7 @@ export default function DerivativesPage() {
                         <h1 className="text-3xl font-bold text-white mb-2">Derivative Works</h1>
                         {parentAsset && (
                             <p className="text-muted-foreground">
-                                Remixes based on <span className="text-cyan-400 font-medium">{parentAsset.name}</span>
+                                Remixes based on <span className="text-violet-400 font-medium">{parentAsset.name}</span>
                             </p>
                         )}
                     </div>
@@ -94,7 +92,7 @@ export default function DerivativesPage() {
                     {derivatives.length > 0 ? (
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {derivatives.map((asset) => (
-                                <Link key={asset.id} href={`/asset/${asset.id}`}>
+                                <Link key={asset.id} href={`/asset/${asset.tokenId || asset.id}`}>
                                     <ContentCard
                                         title={asset.name}
                                         description={asset.description || ""}

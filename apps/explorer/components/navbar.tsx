@@ -165,12 +165,12 @@ export function Navbar() {
                   {searchResults.assets.map(asset => (
                     <Link
                       key={asset.id}
-                      href={`/asset/${asset.id}`}
+                      href={`/asset/${asset.tokenId || asset.id}`}
                       className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
                     >
                       <div className="h-10 w-10 rounded-md bg-muted/20 overflow-hidden">
                         {asset.thumbnail ? (
-                          <img src={asset.thumbnail} alt={asset.name} className="h-full w-full object-cover" />
+                          <img loading="lazy" src={asset.thumbnail} alt={asset.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="h-full w-full flex items-center justify-center text-muted-foreground">
                             <Search className="h-4 w-4" />

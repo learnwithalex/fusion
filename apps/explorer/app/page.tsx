@@ -211,7 +211,7 @@ export default function HomePage() {
                     <div className="flex-1 min-w-[300px] space-y-4">
                       <div className="flex justify-between">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price Range</label>
-                        <span className="text-xs font-mono text-cyan-400">
+                        <span className="text-xs font-mono text-violet-400">
                           ${priceRange[0]} - ${priceRange[1]}
                         </span>
                       </div>

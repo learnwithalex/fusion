@@ -66,7 +66,7 @@ export function ImageUpload({ value, onChange, type = "profile" }: ImageUploadPr
             >
                 {/* Background Image or Gradient */}
                 {value ? (
-                    <img
+                    <img loading="lazy"
                         src={value}
                         alt={type}
                         className="h-full w-full object-cover"

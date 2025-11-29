@@ -16,6 +16,7 @@ import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { toast } from 'sonner'
+import { PageLoader } from "@/components/page-loader"
 
 export default function EditProfilePage() {
     const { token } = useBackendAuth()
@@ -118,19 +119,11 @@ export default function EditProfilePage() {
     }
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
-                <Navbar />
-                <Sidebar />
-                <main className="ml-20 px-8 py-8 flex items-center justify-center min-h-screen">
-                    <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
-                </main>
-            </div>
-        )
+        return <PageLoader message="Loading profile..." />
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
+        <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
             <Navbar />
             <Sidebar />
 
@@ -173,7 +166,7 @@ export default function EditProfilePage() {
                                             id="username"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 px-4 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 px-4 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
 
@@ -183,7 +176,7 @@ export default function EditProfilePage() {
                                             id="bio"
                                             value={bio}
                                             onChange={(e) => setBio(e.target.value)}
-                                            className="min-h-[120px] rounded-xl border-white/10 bg-white/5 px-4 py-3 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50 resize-none"
+                                            className="min-h-[120px] rounded-xl border-white/10 bg-white/5 px-4 py-3 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50 resize-none"
                                         />
                                         <p className="text-xs text-muted-foreground text-right">{bio.length}/500 characters</p>
                                     </div>
@@ -204,7 +197,7 @@ export default function EditProfilePage() {
                                             value={website}
                                             onChange={(e) => setWebsite(e.target.value)}
                                             placeholder="your-website.com"
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -218,7 +211,7 @@ export default function EditProfilePage() {
                                             value={twitter}
                                             onChange={(e) => setTwitter(e.target.value)}
                                             placeholder="@username"
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -232,7 +225,7 @@ export default function EditProfilePage() {
                                             value={spotify}
                                             onChange={(e) => setSpotify(e.target.value)}
                                             placeholder="Artist URL or username"
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -246,7 +239,7 @@ export default function EditProfilePage() {
                                             value={youtube}
                                             onChange={(e) => setYoutube(e.target.value)}
                                             placeholder="Channel URL or @handle"
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -260,7 +253,7 @@ export default function EditProfilePage() {
                                             value={tiktok}
                                             onChange={(e) => setTiktok(e.target.value)}
                                             placeholder="@username"
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -274,7 +267,7 @@ export default function EditProfilePage() {
                                             value={instagram}
                                             onChange={(e) => setInstagram(e.target.value)}
                                             placeholder="@username"
-                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-cyan-500/50"
+                                            className="h-12 rounded-xl border-white/10 bg-white/5 pl-11 backdrop-blur-md focus:bg-white/10 focus:ring-violet-500/50"
                                         />
                                     </div>
                                 </div>
@@ -290,7 +283,7 @@ export default function EditProfilePage() {
                             <Button
                                 onClick={handleSave}
                                 disabled={saving}
-                                className="h-12 gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-8 font-semibold text-white shadow-lg shadow-cyan-500/20 hover:from-cyan-400 hover:to-violet-400 hover:shadow-cyan-500/40 transition-all hover:scale-105"
+                                className="h-12 gap-2 rounded-full bg-gradient-to-r from-violet-600 to-purple-600 px-8 font-semibold text-white shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-purple-500 hover:shadow-violet-500/40 transition-all hover:scale-105"
                             >
                                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                                 {saving ? "Saving..." : "Save Changes"}
@@ -302,3 +295,4 @@ export default function EditProfilePage() {
         </div>
     )
 }
+

@@ -16,6 +16,7 @@ interface Asset {
     description: string
     type: string
     thumbnail: string | null
+    tokenId?: string | null
     createdAt: string
     license?: {
         price: string
@@ -57,7 +58,7 @@ export default function SearchPage() {
     }, [query])
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="min-h-screen bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-black to-purple-900/20">
             <Navbar />
             <Sidebar />
 
@@ -87,7 +88,7 @@ export default function SearchPage() {
                                             >
                                                 <div className="h-16 w-24 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xl font-bold text-white shadow-lg group-hover:scale-105 transition-transform overflow-hidden">
                                                     {user.profileImage ? (
-                                                        <img src={user.profileImage} alt={user.name || "User"} className="h-full w-full object-cover" />
+                                                        <img loading="lazy" src={user.profileImage} alt={user.name || "User"} className="h-full w-full object-cover" />
                                                     ) : (
                                                         user.name?.[0] || user.walletAddress[2]
                                                     )}
@@ -111,7 +112,7 @@ export default function SearchPage() {
                                     <h2 className="text-xl font-bold text-white mb-6">Assets</h2>
                                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                         {results.assets.map((asset) => (
-                                            <Link key={asset.id} href={`/asset/${asset.id}`}>
+                                            <Link key={asset.id} href={`/asset/${asset.tokenId || asset.id}`}>
                                                 <ContentCard
                                                     title={asset.name}
                                                     description={asset.description}

@@ -313,7 +313,13 @@ router.get("/:id", async (req, res) => {
     const { id } = req.params;
     try {
         // 1. Fetch Asset with Creator
-        const assetResult = await db.select({
+        // Check if id is a number (DB ID) or string (Token ID)
+        // We assume Token IDs are large strings or UUIDs, while DB IDs are integers.
+        // However, standard is to try Token ID first if it looks like one, or just try both.
+        // Simplest: Try to find by Token ID first. If not found, try by DB ID if it parses to int.
+
+        // Helper to build the base query
+        const buildAssetQuery = () => db.select({
             asset: assets,
             creator: {
                 id: users.id,
@@ -323,8 +329,15 @@ router.get("/:id", async (req, res) => {
             }
         })
             .from(assets)
-            .leftJoin(users, eq(assets.userId, users.id))
-            .where(eq(assets.id, parseInt(id)));
+            .leftJoin(users, eq(assets.userId, users.id));
+
+        // 1. Try to find by Token ID first
+        let assetResult = await buildAssetQuery().where(eq(assets.tokenId, id));
+
+        // 2. If not found and id looks like a DB ID (number), try by DB ID
+        if (!assetResult[0] && !isNaN(parseInt(id))) {
+            assetResult = await buildAssetQuery().where(eq(assets.id, parseInt(id)));
+        }
 
         if (!assetResult[0]) return res.status(404).json({ error: "Asset not found" });
         const { asset, creator } = assetResult[0];
@@ -338,10 +351,8 @@ router.get("/:id", async (req, res) => {
 
         // 3. Fetch Metadata (via AssetFile)
         let metadata = null;
-        let fileUrl = null;
         const fileResult = await db.select().from(assetFiles).where(eq(assetFiles.assetId, asset.id)).orderBy(desc(assetFiles.createdAt)).limit(1);
         if (fileResult[0]) {
-            fileUrl = fileResult[0].file;
             const metadataResult = await db.select().from(assetMetadata).where(eq(assetMetadata.assetFileId, fileResult[0].id));
             if (metadataResult[0]) {
                 metadata = metadataResult[0];
@@ -360,7 +371,7 @@ router.get("/:id", async (req, res) => {
         })
             .from(assets)
             .leftJoin(users, eq(assets.userId, users.id))
-            .where(eq(assets.remixOf, parseInt(id)))
+            .where(eq(assets.remixOf, asset.id))
             .limit(4);
 
         // 5. Fetch Activity (Transactions)
@@ -375,7 +386,7 @@ router.get("/:id", async (req, res) => {
         })
             .from(transactions)
             .leftJoin(users, eq(transactions.userId, users.id))
-            .where(eq(transactions.assetId, parseInt(id)))
+            .where(eq(transactions.assetId, asset.id))
             .orderBy(desc(transactions.createdAt))
             .limit(10);
 
@@ -399,7 +410,6 @@ router.get("/:id", async (req, res) => {
             creator,
             license,
             metadata,
-            fileUrl,
             derivatives,
             activity,
             remixParent

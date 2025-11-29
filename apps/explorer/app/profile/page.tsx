@@ -19,7 +19,6 @@ import { useAuth } from "@campnetwork/origin/react"
 import { toast } from 'sonner'
 import { AssetCard } from "@/components/asset-card"
 import { ActivityCard } from "@/components/activity-card"
-
 interface UserProfile {
   id: number
   walletAddress: string
@@ -291,7 +290,7 @@ export default function ProfilePage() {
             {/* Cover Image */}
             {profile.headerImage ? (
               <div className="h-64 w-full overflow-hidden">
-                <img src={profile.headerImage} alt="Header" className="h-full w-full object-cover" />
+                <img loading="lazy" src={profile.headerImage} alt="Header" className="h-full w-full object-cover" />
               </div>
             ) : (
               <div className="h-64 w-full bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 opacity-80" />
@@ -304,7 +303,7 @@ export default function ProfilePage() {
                   <div className="relative -mt-24">
                     <div className="h-40 w-40 rounded-[2rem] border-4 border-black bg-black/50 flex items-center justify-center shadow-2xl overflow-hidden group">
                       {profile.profileImage ? (
-                        <img src={profile.profileImage} alt="Profile" className="h-full w-full object-cover" />
+                        <img loading="lazy" src={profile.profileImage} alt="Profile" className="h-full w-full object-cover" />
                       ) : (
                         <>
                           <div className="absolute inset-0 bg-gradient-to-br from-violet-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -348,37 +347,37 @@ export default function ProfilePage() {
                       {profile.website && (
                         <div className="flex items-center gap-2">
                           <LinkIcon className="h-4 w-4 text-violet-400" />
-                          <a href={`https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.website}</a>
+                          <a href={`https://${profile.website}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.website}</a>
                         </div>
                       )}
                       {profile.twitter && (
                         <div className="flex items-center gap-2">
-                          <Twitter className="h-4 w-4 text-cyan-400" />
-                          <a href={`https://twitter.com/${profile.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.twitter}</a>
+                          <Twitter className="h-4 w-4 text-violet-400" />
+                          <a href={`https://twitter.com/${profile.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.twitter}</a>
                         </div>
                       )}
                       {profile.spotify && (
                         <div className="flex items-center gap-2">
                           <FaSpotify className="h-4 w-4 text-green-400" />
-                          <a href={profile.spotify} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">Spotify</a>
+                          <a href={profile.spotify} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">Spotify</a>
                         </div>
                       )}
                       {profile.youtube && (
                         <div className="flex items-center gap-2">
                           <Youtube className="h-4 w-4 text-red-400" />
-                          <a href={profile.youtube} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">YouTube</a>
+                          <a href={profile.youtube} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">YouTube</a>
                         </div>
                       )}
                       {profile.tiktok && (
                         <div className="flex items-center gap-2">
                           <FaTiktok className="h-4 w-4 text-white" />
-                          <a href={`https://tiktok.com/${profile.tiktok.replace('@', '@')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.tiktok}</a>
+                          <a href={`https://tiktok.com/${profile.tiktok.replace('@', '@')}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.tiktok}</a>
                         </div>
                       )}
                       {profile.instagram && (
                         <div className="flex items-center gap-2">
                           <Instagram className="h-4 w-4 text-pink-400" />
-                          <a href={`https://instagram.com/${profile.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-cyan-100 hover:text-white transition-colors">{profile.instagram}</a>
+                          <a href={`https://instagram.com/${profile.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="text-violet-100 hover:text-white transition-colors">{profile.instagram}</a>
                         </div>
                       )}
                     </div>
@@ -387,7 +386,7 @@ export default function ProfilePage() {
 
                 <div className="mt-8 flex gap-3">
                   <Link href="/profile/edit">
-                    <Button className="h-12 rounded-full bg-white text-slate-950 hover:bg-cyan-50 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105">
+                    <Button className="h-12 rounded-full bg-white text-slate-950 hover:bg-violet-50 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105">
                       Edit Profile
                     </Button>
                   </Link>
@@ -403,19 +402,19 @@ export default function ProfilePage() {
               {stats && (
                 <div className="grid grid-cols-4 gap-8">
                   <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{stats.uploads}</p>
+                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">{stats.uploads}</p>
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Uploads</p>
                   </div>
                   <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{stats.licenses}</p>
+                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">{stats.licenses}</p>
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Licenses Sold</p>
                   </div>
                   <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{parseFloat(stats.earnings).toFixed(2)} CAMP</p>
+                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">{parseFloat(stats.earnings).toFixed(2)} CAMP</p>
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Total Earnings</p>
                   </div>
                   <div className="group rounded-2xl bg-white/5 p-4 border border-white/5 hover:bg-white/10 transition-colors">
-                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-cyan-400 transition-colors">{stats.followers}</p>
+                    <p className="text-3xl font-bold text-white mb-1 group-hover:text-violet-400 transition-colors">{stats.followers}</p>
                     <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Followers</p>
                   </div>
                 </div>
@@ -426,10 +425,10 @@ export default function ProfilePage() {
           {/* Content Tabs */}
           <Tabs defaultValue="uploads" className="space-y-8">
             <TabsList className="h-14 bg-white/5 border border-white/10 backdrop-blur-md p-1.5 rounded-full w-fit">
-              <TabsTrigger value="uploads" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Your Uploads</TabsTrigger>
-              <TabsTrigger value="creator-rewards" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300"><Gift /> Creator Rewards</TabsTrigger>
-              <TabsTrigger value="licensed" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Licensed Items</TabsTrigger>
-              <TabsTrigger value="activity" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Activity</TabsTrigger>
+              <TabsTrigger value="uploads" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Your Uploads</TabsTrigger>
+              <TabsTrigger value="creator-rewards" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300"><Gift /> Creator Rewards</TabsTrigger>
+              <TabsTrigger value="licensed" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Licensed Items</TabsTrigger>
+              <TabsTrigger value="activity" className="h-11 rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Activity</TabsTrigger>
             </TabsList>
 
             <TabsContent value="creator-rewards" className="mt-0">
@@ -437,20 +436,20 @@ export default function ProfilePage() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Unclaimed */}
-                  <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-cyan-500/10 to-violet-500/10 p-8 backdrop-blur-md">
+                  <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-violet-600/10 to-violet-500/10 p-8 backdrop-blur-md">
                     <div className="relative z-10">
-                      <h3 className="text-lg font-medium text-cyan-100 mb-1">Total Unclaimed Rewards</h3>
+                      <h3 className="text-lg font-medium text-violet-100 mb-1">Total Unclaimed Rewards</h3>
                       <div className="flex items-end gap-4 mb-6">
                         <span className="text-5xl font-bold text-white tracking-tight">
                           {Object.values(royalties).reduce((acc, val) => acc + parseFloat(val), 0).toFixed(4)}
                         </span>
-                        <span className="text-xl font-medium text-cyan-400 mb-2">CAMP</span>
+                        <span className="text-xl font-medium text-violet-400 mb-2">CAMP</span>
                       </div>
                       {Object.keys(royalties).length > 0 && (
                         <Button
                           onClick={handleClaimAllRoyalties}
                           disabled={claiming !== null}
-                          className="h-12 rounded-full bg-white text-slate-950 hover:bg-cyan-50 px-8 font-bold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105"
+                          className="h-12 rounded-full bg-white text-slate-950 hover:bg-violet-50 px-8 font-bold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105"
                         >
                           {claiming === -1 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FaCoins className="ml-1 h-4 w-4" />}
                           Claim All Rewards
@@ -458,7 +457,7 @@ export default function ProfilePage() {
                       )}
                     </div>
                     {/* Decorative gradients */}
-                    <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl" />
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-violet-600/20 blur-3xl" />
                     <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" />
                   </div>
 
@@ -486,7 +485,7 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex gap-2">
                       <Badge variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer">7D</Badge>
-                      <Badge variant="outline" className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 cursor-pointer">30D</Badge>
+                      <Badge variant="outline" className="bg-violet-600/20 border-violet-600/50 text-violet-400 cursor-pointer">30D</Badge>
                       <Badge variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer">ALL</Badge>
                     </div>
                   </div>
@@ -537,7 +536,7 @@ export default function ProfilePage() {
                   <h3 className="text-xl font-bold text-white mb-2">No Uploads Yet</h3>
                   <p className="text-muted-foreground mb-6">Start creating and uploading your content to the platform.</p>
                   <Link href="/upload">
-                    <Button className="rounded-full bg-gradient-to-r from-cyan-500 to-violet-500 px-8">
+                    <Button className="rounded-full bg-gradient-to-r from-violet-600 to-violet-500 px-8">
                       Upload Now
                     </Button>
                   </Link>
@@ -549,26 +548,26 @@ export default function ProfilePage() {
               {licensedItems.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {licensedItems.map((asset) => (
-                    <Link href={`/asset/${asset.id}`} key={asset.id}>
-                      <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
+                    <Link href={`/asset/${asset.tokenId || asset.id}`} key={asset.id}>
+                      <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-violet-600/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
                         {/* Image */}
                         <div className="aspect-[4/3] overflow-hidden">
-                          <div className="h-full w-full bg-slate-900">
+                          <div className="h-full w-full bg-black/50">
                             {asset.thumbnail ? (
-                              <img
+                              <img loading="lazy"
                                 src={asset.thumbnail}
                                 alt={asset.name}
                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                               />
                             ) : (
-                              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-violet-500/10">
+                              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-violet-600/10 to-violet-500/10">
                                 {typeIcons[asset.type as keyof typeof typeIcons] ? (
                                   (() => {
                                     const Icon = typeIcons[asset.type as keyof typeof typeIcons]
-                                    return <Icon className="h-12 w-12 text-cyan-500/40" />
+                                    return <Icon className="h-12 w-12 text-violet-600/40" />
                                   })()
                                 ) : (
-                                  <Sparkles className="h-12 w-12 text-cyan-500/40" />
+                                  <Sparkles className="h-12 w-12 text-violet-600/40" />
                                 )}
                               </div>
                             )}
@@ -579,7 +578,7 @@ export default function ProfilePage() {
 
                           {/* Type Badge */}
                           <div className="absolute top-3 left-3">
-                            <Badge variant="secondary" className="bg-slate-950/50 backdrop-blur-md border-white/10 text-white hover:bg-slate-950/70">
+                            <Badge variant="secondary" className="bg-black/50 backdrop-blur-md border-white/10 text-white hover:bg-black/70">
                               {asset.type}
                             </Badge>
                           </div>
@@ -594,7 +593,7 @@ export default function ProfilePage() {
 
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="border-white/10 bg-white/5 text-xs text-cyan-300">
+                              <Badge variant="outline" className="border-white/10 bg-white/5 text-xs text-violet-300">
                                 Licensed
                               </Badge>
                             </div>
@@ -624,7 +623,7 @@ export default function ProfilePage() {
                   {activity.map((item) => (
                     <div key={item.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-400">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10 text-violet-400">
                           {item.transactionType === 'bought' ? <Sparkles className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
                         </div>
                         <div>
@@ -659,3 +658,4 @@ export default function ProfilePage() {
     </div>
   )
 }
+

@@ -171,7 +171,7 @@ export default function ExplorePage() {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="mb-2 text-4xl font-bold tracking-tight">
-                  Explore <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">Assets</span>
+                  Explore <span className="bg-gradient-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">Assets</span>
                 </h1>
                 <p className="text-muted-foreground text-lg">Discover and license premium IP assets from top creators</p>
               </div>
@@ -256,7 +256,7 @@ export default function ExplorePage() {
                   <div className="flex-1 min-w-[200px] space-y-4">
                     <div className="flex justify-between">
                       <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Price Range</label>
-                      <span className="text-xs font-mono text-cyan-400">
+                      <span className="text-xs font-mono text-violet-400">
                         ${priceRange[0]} - ${priceRange[1]}
                       </span>
                     </div>
@@ -335,7 +335,7 @@ export default function ExplorePage() {
                 <Button
                   variant="ghost"
                   onClick={clearFilters}
-                  className="text-cyan-400 hover:text-cyan-300"
+                  className="text-violet-400 hover:text-violet-300"
                 >
                   Clear all filters
                 </Button>

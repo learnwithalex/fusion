@@ -481,9 +481,9 @@ export default function UploadPage() {
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-cyan-100">Remixing Derivative Work</h3>
-                  <p className="text-sm text-cyan-200/60">
-                    You are creating a derivative of <span className="font-medium text-cyan-100">{remixParent.name}</span>
+                  <h3 className="font-semibold text-violet-100">Remixing Derivative Work</h3>
+                  <p className="text-sm text-violet-200/60">
+                    You are creating a derivative of <span className="font-medium text-violet-100">{remixParent.name}</span>
                   </p>
                 </div>
               </div>
@@ -493,7 +493,7 @@ export default function UploadPage() {
           {/* Header */}
           <div className="mb-12 text-center lg:text-left">
             <h1 className="text-5xl font-black tracking-tighter text-white mb-4">
-              Upload & <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400">Mint</span>
+              Upload & <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-purple-400">Mint</span>
             </h1>
             <p className="text-xl text-slate-400 max-w-2xl">
               Create a new IP asset with automated licensing terms and mint it directly to the blockchain.
@@ -539,7 +539,7 @@ export default function UploadPage() {
                   <div className="flex flex-col items-center justify-center gap-4">
                     {thumbnailUrl ? (
                       <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border/20">
-                        <img src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                        <img loading="lazy" src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
                         <Button
                           variant="destructive"
                           size="sm"
@@ -647,7 +647,7 @@ export default function UploadPage() {
                   <div className="space-y-3">
                     <Label htmlFor="type" className="text-base font-medium text-slate-300">Asset Type</Label>
                     <Select onValueChange={setType}>
-                      <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-cyan-500/20">
+                      <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-violet-500/20">
                         <SelectValue placeholder="Select asset type" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -665,7 +665,7 @@ export default function UploadPage() {
                         </SelectItem>
                         <SelectItem value="Video">
                           <div className="flex items-center gap-2">
-                            <Video className="h-4 w-4 text-cyan-400" />
+                            <Video className="h-4 w-4 text-violet-400" />
                             Video & Animation
                           </div>
                         </SelectItem>
@@ -732,7 +732,7 @@ export default function UploadPage() {
                   <div className="space-y-3">
                     <Label htmlFor="duration" className="text-base font-medium text-slate-300">License Duration</Label>
                     <Select>
-                      <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-cyan-500/20">
+                      <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-violet-500/20">
                         <SelectValue placeholder="Select duration" />
                       </SelectTrigger>
                       <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -814,7 +814,7 @@ export default function UploadPage() {
                       <div className="space-y-3">
                         <Label htmlFor="bidding-duration" className="text-base font-medium text-slate-300">Auction Duration</Label>
                         <Select value={biddingDuration} onValueChange={setBiddingDuration}>
-                          <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-cyan-500/20">
+                          <SelectTrigger className="h-12 bg-white/5 border-white/10 text-white focus:ring-violet-500/20">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-slate-900 border-white/10 text-white">
@@ -890,7 +890,7 @@ export default function UploadPage() {
                           <p className="text-sm text-red-200 mb-2">
                             You must own a license to remix this asset.
                           </p>
-                          <Link href={`/asset/${remixParent.id}`}>
+                          <Link href={`/asset/${remixParent.tokenId || remixParent.id}`}>
                             <Button size="sm" variant="destructive" className="w-full">
                               Buy Access
                             </Button>
@@ -910,9 +910,9 @@ export default function UploadPage() {
 
                 <div className="mb-6 aspect-square rounded-2xl bg-black/20 flex items-center justify-center overflow-hidden border border-white/5">
                   {thumbnailUrl ? (
-                    <img src={thumbnailUrl} alt="Preview" className="w-full h-full object-cover" />
+                    <img loading="lazy" src={thumbnailUrl} alt="Preview" className="w-full h-full object-cover" />
                   ) : filePreview ? (
-                    <img src={filePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img loading="lazy" src={filePreview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
                     <FileText className="h-16 w-16 text-slate-600" />
                   )}
