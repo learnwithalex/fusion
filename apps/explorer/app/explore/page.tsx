@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
+import { PageLoader } from "@/components/page-loader"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Filter, Search, X, SlidersHorizontal } from 'lucide-react'
@@ -288,9 +289,7 @@ export default function ExplorePage() {
           {/* Asset Grid */}
           <div>
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-muted-foreground">Loading assets...</div>
-              </div>
+              <PageLoader message="Loading assets..." />
             ) : filteredAssets.length > 0 ? (
               <>
                 <div className="mb-6 flex items-center justify-between">

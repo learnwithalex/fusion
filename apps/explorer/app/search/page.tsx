@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import ContentCard from "@/components/ContentCard"
+import { PageLoader } from "@/components/page-loader"
 import { Loader2 } from "lucide-react"
 import Link from "next/link"
 
@@ -70,9 +71,7 @@ export default function SearchPage() {
                     </div>
 
                     {loading ? (
-                        <div className="flex h-64 items-center justify-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-cyan-500" />
-                        </div>
+                        <PageLoader message="Searching..." />
                     ) : (results.assets.length > 0 || results.users.length > 0) ? (
                         <div className="space-y-12">
                             {/* Creators Section */}

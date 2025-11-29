@@ -3,6 +3,7 @@
 import { Navbar } from "@/components/navbar"
 import { Hero } from "@/components/hero"
 import { Sidebar } from "@/components/sidebar"
+import { PageLoader } from "@/components/page-loader"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TrendingUp, Clock, Music, Image, Video, Gamepad2, SlidersHorizontal, ArrowUpDown, X } from 'lucide-react'
@@ -125,11 +126,7 @@ export default function HomePage() {
     const processedAssets = getProcessedAssets(category)
 
     if (loading) {
-      return (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-muted-foreground">Loading assets...</div>
-        </div>
-      )
+      return <PageLoader message="Loading assets..." />
     }
 
     if (processedAssets.length === 0) {

@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
+import { PageLoader } from "@/components/page-loader"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -263,15 +264,7 @@ export default function ProfilePage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-950 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-cyan-900/20 via-slate-950 to-violet-900/20">
-        <Navbar />
-        <Sidebar />
-        <main className="ml-20 px-8 py-8 flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
-        </main>
-      </div>
-    )
+    return <PageLoader message="Loading profile..." />
   }
 
   if (!profile) {

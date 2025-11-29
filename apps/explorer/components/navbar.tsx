@@ -85,7 +85,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-2xl shadow-lg shadow-black/5">
       <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between gap-6 px-6">
         <Link href="/" className="flex items-center gap-2">
-          <img loading='lazy' src="/fusion-logo.png" alt="Fusion Logo" className='h-10' />
+          <img loading='lazy' src="/fusion-logo.png" alt="Fusion Logo" className='h-8' />
         </Link>
 
         {/* Live Price Widget */}

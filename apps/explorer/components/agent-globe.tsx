@@ -113,6 +113,17 @@ export const AgentGlobe = forwardRef<AgentGlobeRef, AgentGlobeProps>(({ markers,
                 backgroundColor="rgba(0,0,0,0)"
                 width={800}
                 height={800}
+                onGlobeReady={() => {
+                    // Enable auto-rotation when globe is ready
+                    if (globeEl.current && globeEl.current.controls) {
+                        const controls = globeEl.current.controls()
+                        if (controls) {
+                            controls.autoRotate = true
+                            controls.autoRotateSpeed = 1.5
+                            controls.enableZoom = true
+                        }
+                    }
+                }}
 
                 // Markers (HTML Elements for Logos)
                 htmlElementsData={markers}
