@@ -7,12 +7,17 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { User, LinkIcon, Twitter, Copy, ExternalLink, Music, Image, Video, Gamepad2, Sparkles, Youtube, Instagram, Loader2, Upload } from 'lucide-react'
-import { FaTiktok, FaSpotify } from 'react-icons/fa'
+import { User, LinkIcon, Twitter, Copy, ExternalLink, Music, Image, Video, Gamepad2, Sparkles, Youtube, Instagram, Loader2, Upload, Coins, Gift } from 'lucide-react'
+import { FaTiktok, FaSpotify, FaCoins } from 'react-icons/fa'
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { useRouter } from "next/navigation"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { useAuth } from "@campnetwork/origin/react"
+import { toast } from 'sonner'
+import { AssetCard } from "@/components/asset-card"
+import { ActivityCard } from "@/components/activity-card"
 
 interface UserProfile {
   id: number
@@ -43,6 +48,7 @@ interface Asset {
   thumbnail: string | null
   type: string
   createdAt: string
+  tokenId?: string | null
   license?: {
     price: string
   }
@@ -72,6 +78,15 @@ export default function ProfilePage() {
   const [uploads, setUploads] = useState<Asset[]>([])
   const [licensedItems, setLicensedItems] = useState<Asset[]>([])
   const [activity, setActivity] = useState<Activity[]>([])
+  const auth = useAuth()
+  const [royalties, setRoyalties] = useState<Record<number, string>>({})
+  const [claiming, setClaiming] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (uploads.length > 0 && auth.origin) {
+      fetchRoyalties(uploads)
+    }
+  }, [uploads, auth.origin])
 
   useEffect(() => {
     if (!token) {
@@ -151,11 +166,89 @@ export default function ProfilePage() {
 
   const fetchActivity = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:3001/users/${userId}/activity`)
-      const data = await res.json()
-      setActivity(data)
+      const res = await fetch(`http://localhost:3001/users/me/activity?limit=20`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        setActivity(data.activities || [])
+      }
     } catch (error) {
       console.error("Failed to fetch activity:", error)
+    }
+  }
+
+  const fetchRoyalties = async (assets: Asset[]) => {
+    if (!auth.origin) return
+
+    const newRoyalties: Record<number, string> = {}
+
+    for (const asset of assets) {
+      if (asset.tokenId) {
+        try {
+          // @ts-ignore
+          const info = await auth.origin.getRoyalties(BigInt(asset.tokenId))
+          if (info && info.balance > 0n) {
+            const amount = Number(info.balance) / 1e18
+            if (amount > 0) {
+              newRoyalties[asset.id] = amount.toFixed(4)
+            }
+          }
+        } catch (e) {
+          // console.error(`Failed to fetch royalties for asset ${asset.id}:`, e)
+        }
+      }
+    }
+    setRoyalties(newRoyalties)
+  }
+
+  const handleClaimRoyalties = async (e: React.MouseEvent, asset: Asset) => {
+    e.preventDefault()
+    if (!asset.tokenId || !auth.origin) return
+
+    setClaiming(asset.id)
+    try {
+      // @ts-ignore
+      await auth.origin.claimRoyalties(BigInt(asset.tokenId))
+      toast.success("Royalties claimed successfully!")
+      fetchRoyalties(uploads)
+    } catch (e) {
+      console.error("Failed to claim royalties:", e)
+      toast.error("Failed to claim royalties")
+    } finally {
+      setClaiming(null)
+    }
+  }
+
+  const handleClaimAllRoyalties = async () => {
+    if (!auth.origin) return
+
+    const assetsWithRoyalties = uploads.filter(a => royalties[a.id])
+    if (assetsWithRoyalties.length === 0) return
+
+    setClaiming(-1)
+
+    try {
+      for (const asset of assetsWithRoyalties) {
+        if (asset.tokenId) {
+          try {
+            // @ts-ignore
+            await auth.origin.claimRoyalties(BigInt(asset.tokenId))
+          } catch (e) {
+            console.error(`Failed to claim for asset ${asset.id}:`, e)
+          }
+        }
+      }
+      toast.success("All royalties claimed successfully!")
+      fetchRoyalties(uploads)
+    } catch (e) {
+      console.error("Failed to claim all royalties:", e)
+      toast.error("Failed to complete all claims")
+    } finally {
+      setClaiming(null)
     }
   }
 
@@ -341,77 +434,106 @@ export default function ProfilePage() {
           <Tabs defaultValue="uploads" className="space-y-8">
             <TabsList className="h-14 bg-white/5 border border-white/10 backdrop-blur-md p-1.5 rounded-full w-fit">
               <TabsTrigger value="uploads" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Your Uploads</TabsTrigger>
+              <TabsTrigger value="creator-rewards" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300"><Gift /> Creator Rewards</TabsTrigger>
               <TabsTrigger value="licensed" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Licensed Items</TabsTrigger>
               <TabsTrigger value="activity" className="h-11 rounded-full px-6 data-[state=active]:bg-cyan-500 data-[state=active]:text-white transition-all duration-300">Activity</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="creator-rewards" className="mt-0">
+              <div className="space-y-8">
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Unclaimed */}
+                  <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-gradient-to-br from-cyan-500/10 to-violet-500/10 p-8 backdrop-blur-md">
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-medium text-cyan-100 mb-1">Total Unclaimed Rewards</h3>
+                      <div className="flex items-end gap-4 mb-6">
+                        <span className="text-5xl font-bold text-white tracking-tight">
+                          {Object.values(royalties).reduce((acc, val) => acc + parseFloat(val), 0).toFixed(4)}
+                        </span>
+                        <span className="text-xl font-medium text-cyan-400 mb-2">CAMP</span>
+                      </div>
+                      {Object.keys(royalties).length > 0 && (
+                        <Button
+                          onClick={handleClaimAllRoyalties}
+                          disabled={claiming !== null}
+                          className="h-12 rounded-full bg-white text-slate-950 hover:bg-cyan-50 px-8 font-bold shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)] transition-all hover:scale-105"
+                        >
+                          {claiming === -1 ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FaCoins className="ml-1 h-4 w-4" />}
+                          Claim All Rewards
+                        </Button>
+                      )}
+                    </div>
+                    {/* Decorative gradients */}
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-cyan-500/20 blur-3xl" />
+                    <div className="absolute bottom-0 left-0 -mb-10 -ml-10 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" />
+                  </div>
+
+                  {/* Total Earned */}
+                  <div className="relative overflow-hidden rounded-[2.5rem] border border-white/10 bg-white/5 p-8 backdrop-blur-md">
+                    <div className="relative z-10">
+                      <h3 className="text-lg font-medium text-slate-400 mb-1">Total Rewards Earned</h3>
+                      <div className="flex items-end gap-4">
+                        <span className="text-5xl font-bold text-white tracking-tight">
+                          {stats ? parseFloat(stats.earnings).toFixed(2) : "0.00"}
+                        </span>
+                        <span className="text-xl font-medium text-slate-500 mb-2">CAMP</span>
+                      </div>
+                    </div>
+                    <div className="absolute top-0 right-0 -mt-10 -mr-10 h-40 w-40 rounded-full bg-white/5 blur-3xl" />
+                  </div>
+                </div>
+
+                {/* Chart Section */}
+                <div className="rounded-[2.5rem] border border-white/10 bg-white/5 p-8 backdrop-blur-md">
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Earnings History</h3>
+                      <p className="text-sm text-muted-foreground">Your rewards performance over time</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Badge variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer">7D</Badge>
+                      <Badge variant="outline" className="bg-cyan-500/20 border-cyan-500/50 text-cyan-400 cursor-pointer">30D</Badge>
+                      <Badge variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer">ALL</Badge>
+                    </div>
+                  </div>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={[
+                        { date: 'Jan 1', amount: 120 },
+                        { date: 'Jan 5', amount: 350 },
+                        { date: 'Jan 10', amount: 280 },
+                        { date: 'Jan 15', amount: 590 },
+                        { date: 'Jan 20', amount: 450 },
+                        { date: 'Jan 25', amount: 890 },
+                        { date: 'Jan 30', amount: 1200 },
+                      ]}>
+                        <defs>
+                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                        <Tooltip
+                          contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                          itemStyle={{ color: '#fff' }}
+                        />
+                        <Area type="monotone" dataKey="amount" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
 
             <TabsContent value="uploads" className="mt-0">
               {uploads.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {uploads.map((asset) => (
-                    <Link href={`/asset/${asset.id}`} key={asset.id}>
-                      <Card className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:-translate-y-1 hover:border-cyan-500/30 hover:shadow-[0_0_30px_-10px_rgba(6,182,212,0.3)]">
-                        {/* Image */}
-                        <div className="aspect-[4/3] overflow-hidden">
-                          <div className="h-full w-full bg-slate-900">
-                            {asset.thumbnail ? (
-                              <img
-                                src={asset.thumbnail}
-                                alt={asset.name}
-                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-cyan-500/10 to-violet-500/10">
-                                {typeIcons[asset.type as keyof typeof typeIcons] ? (
-                                  (() => {
-                                    const Icon = typeIcons[asset.type as keyof typeof typeIcons]
-                                    return <Icon className="h-12 w-12 text-cyan-500/40" />
-                                  })()
-                                ) : (
-                                  <Sparkles className="h-12 w-12 text-cyan-500/40" />
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Overlay Gradient */}
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-60" />
-
-                          {/* Type Badge */}
-                          <div className="absolute top-3 left-3">
-                            <Badge variant="secondary" className="bg-slate-950/50 backdrop-blur-md border-white/10 text-white hover:bg-slate-950/70">
-                              {asset.type}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-5">
-                          <h3 className="font-semibold text-white text-lg mb-1 truncate">{asset.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-4 h-10">
-                            {asset.description || "No description provided"}
-                          </p>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className={
-                                  asset.license
-                                    ? 'border-white/10 bg-white/5 text-xs text-cyan-300'
-                                    : 'border-white/10 bg-yellow-700/50 text-xs text-yellow-400'
-                                }
-                              >
-                                {asset.license ? `${Number(asset.license.price).toFixed(2)} CAMP` : 'Draft'}
-                              </Badge>
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(asset.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </Card>
-                    </Link>
+                    <AssetCard key={asset.id} asset={asset} showBiddingStatus={true} />
                   ))}
                 </div>
               ) : (

@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Sparkles, ArrowRight } from "lucide-react"
+import { Sparkles, ArrowRight, Music, Video, Palette, Gamepad2, User, Film, Code, Cpu, Rocket } from "lucide-react"
+import Link from "next/link"
 
 function Counter({ end, duration = 2000 }: { end: number; duration?: number }) {
     const [count, setCount] = useState(0)
@@ -35,7 +36,25 @@ function Counter({ end, duration = 2000 }: { end: number; duration?: number }) {
     return <>{count.toLocaleString()}</>
 }
 
+const categories = [
+    { text: "Beats", icon: Music, color: "text-fuchsia-400", bg: "bg-fuchsia-400/10", border: "border-fuchsia-400/20" },
+    { text: "Clips", icon: Video, color: "text-cyan-400", bg: "bg-cyan-400/10", border: "border-cyan-400/20" },
+    { text: "Skins", icon: Gamepad2, color: "text-emerald-400", bg: "bg-emerald-400/10", border: "border-emerald-400/20" },
+    { text: "Code", icon: Code, color: "text-blue-400", bg: "bg-blue-400/10", border: "border-blue-400/20" },
+    { text: "Designs", icon: Palette, color: "text-violet-400", bg: "bg-violet-400/10", border: "border-violet-400/20" },
+    { text: "AI Models", icon: Cpu, color: "text-rose-400", bg: "bg-rose-400/10", border: "border-rose-400/20" },
+]
+
 export function Hero() {
+    const [index, setIndex] = useState(0)
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setIndex((prev) => (prev + 1) % categories.length)
+        }, 2500)
+        return () => clearInterval(interval)
+    }, [])
+
     return (
         <div className="relative mb-24 flex min-h-[600px] flex-col items-center justify-center lg:flex-row lg:justify-between">
 
@@ -46,34 +65,65 @@ export function Hero() {
             </div>
 
             {/* Left Content */}
-            <div className="relative z-10 max-w-3xl text-center lg:text-left">
-                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 backdrop-blur-md">
-                    <span className="relative flex h-2 w-2">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"></span>
-                        <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500"></span>
-                    </span>
-                    <span className="text-sm font-medium text-green-300">
-                        Live Marketplace
-                    </span>
-                </div>
+            <div className="relative z-10 max-w-4xl text-center lg:text-left">
+                <Link href="/agent">
+                    <div className="group mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 backdrop-blur-md cursor-pointer transition-all hover:bg-cyan-500/20 hover:border-cyan-500/30 hover:scale-105">
+                        <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
+                        </span>
+                        <span className="text-sm font-medium text-cyan-300">
+                            AI-Powered Royalty Enforcement
+                        </span>
+                        <ArrowRight className="h-3 w-3 text-cyan-400 transition-transform group-hover:translate-x-1" />
+                    </div>
+                </Link>
 
-                <h1 className="mb-8 text-7xl font-black tracking-tighter text-white lg:text-9xl">
-                    Monetize.<br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">License.</span><br />
-                    Earn.
+                <h1 className="mb-8 text-6xl font-black tracking-tighter text-white lg:text-8xl">
+                    Monetize your <br />
+                    <div className="relative h-[1.2em] w-full overflow-hidden">
+                        {categories.map((cat, i) => (
+                            <div
+                                key={i}
+                                className={`absolute left-0 top-0 flex items-center gap-4 transition-all duration-700 ease-in-out ${i === index
+                                    ? "translate-y-0 opacity-100"
+                                    : i < index
+                                        ? "-translate-y-full opacity-0"
+                                        : "translate-y-full opacity-0"
+                                    }`}
+                            >
+                                <div className={`flex items-center justify-center rounded-3xl ${cat.bg} ${cat.border} border p-2 lg:p-4`}>
+                                    <cat.icon className={`h-10 w-10 lg:h-16 lg:w-16 ${cat.color}`} />
+                                </div>
+                                <span className={`text-transparent bg-clip-text bg-gradient-to-r ${cat.color.replace('text-', 'from-').replace('-400', '-400')} to-white`}>
+                                    {cat.text}.
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </h1>
 
                 <p className="mb-10 max-w-xl text-2xl text-slate-400 lg:mx-0">
-                    The infrastructure for the creator economy. Upload your work, set your terms, and let the blockchain handle the rest.
+                    Literally giving creators the ability to license content globally at scale.
                 </p>
 
                 <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
-                    <Button size="lg" className="h-16 rounded-full bg-white px-10 text-xl font-bold text-slate-950 hover:bg-cyan-50 transition-transform hover:scale-105">
-                        Start Earning
-                    </Button>
-                    <Button size="lg" variant="outline" className="h-16 rounded-full border-white/10 bg-white/5 px-10 text-xl backdrop-blur-md hover:bg-white/10">
-                        Explore Assets
-                    </Button>
+                    <Link href="/upload">
+                        <Button size="lg" className="group h-16 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-10 text-xl font-bold text-white shadow-lg shadow-cyan-500/20 transition-all hover:scale-105 hover:shadow-cyan-500/40">
+                            <span className="flex items-center gap-2">
+                                Start Earning
+                                <Rocket className="h-5 w-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
+                            </span>
+                        </Button>
+                    </Link>
+                    <Link href="/explore">
+                        <Button size="lg" variant="outline" className="group h-16 rounded-lg border-white/10 bg-white/5 px-10 text-xl backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/20 hover:scale-105">
+                            <span className="flex items-center gap-2">
+                                Explore Assets
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </span>
+                        </Button>
+                    </Link>
                 </div>
             </div>
 

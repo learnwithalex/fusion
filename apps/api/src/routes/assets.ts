@@ -803,4 +803,30 @@ router.post("/:id/claim-refund", authenticate, async (req, res) => {
     }
 });
 
+// Delete asset (rollback or owner deletion)
+router.delete("/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user!.id;
+
+    try {
+        const asset = await db.select().from(assets).where(eq(assets.id, parseInt(id)));
+        if (!asset[0]) {
+            return res.status(404).json({ error: "Asset not found" });
+        }
+
+        if (asset[0].userId !== userId) {
+            return res.status(403).json({ error: "Not authorized to delete this asset" });
+        }
+
+        // Delete related records (cascade usually handles this, but let's be safe)
+        // Deleting asset should be enough if FKs are set up, but we'll delete the asset
+        await db.delete(assets).where(eq(assets.id, parseInt(id)));
+
+        res.json({ success: true, message: "Asset deleted successfully" });
+    } catch (error) {
+        console.error("Asset deletion error:", error);
+        res.status(500).json({ error: "Failed to delete asset" });
+    }
+});
+
 export default router;

@@ -16,6 +16,7 @@ import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Loader2, Check } from "lucide-react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
+import { toast } from 'sonner'
 
 // Mock data fallback removed
 
@@ -241,38 +242,47 @@ export default function AssetDetailPage() {
     return () => clearInterval(interval)
   }, [asset])
 
-  useEffect(() => {
-    const checkAccess = async () => {
-      if (asset?.tokenId && walletAddress && auth.origin) {
-        try {
-          // Check if user owns the asset or has access
-          // hasAccess(userAddress, tokenId)
-          const access = await auth.origin.hasAccess(
+  const checkAccess = async () => {
+    if (asset?.tokenId && walletAddress && auth.origin) {
+      try {
+        // Check if user owns the asset or has access
+        // hasAccess(userAddress, tokenId)
+        // 1. Check Ownership First
+        const ownerAddress = await auth.origin.ownerOf(BigInt(asset.tokenId))
+        setOwner(ownerAddress)
+
+        let isAccessGranted = false
+        if (ownerAddress.toLowerCase() === walletAddress.toLowerCase()) {
+          isAccessGranted = true
+        } else {
+          // 2. Fallback to License Check
+          isAccessGranted = await auth.origin.hasAccess(
             walletAddress as `0x${string}`,
             BigInt(asset.tokenId)
           )
-          setHasAccess(access)
+        }
 
+        console.log("Access granted:", isAccessGranted)
+        setHasAccess(isAccessGranted)
+
+        if (isAccessGranted) {
           const data = await auth.origin.getData(BigInt(asset.tokenId))
-          //console.log("Asset Data:", data)
-
           if (data && !data.isError && data.data && data.data.length > 0) {
             const fileData = data.data[0]
             if (fileData.file && fileData.file.length > 0) {
               setDownloadUrl(fileData.file[0])
             }
           }
-
-          const ownerAddress = await auth.origin.ownerOf(BigInt(asset.tokenId))
-          setOwner(ownerAddress)
-        } catch (e) {
-          console.error("Failed to check access:", e)
         }
+      } catch (e) {
+        console.error("Failed to check access:", e)
       }
     }
+  }
 
-    if (asset?.tokenId && walletAddress) checkAccess()
-  }, [asset?.tokenId, walletAddress, auth])
+  useEffect(() => {
+    checkAccess()
+  }, [asset, walletAddress, auth.origin])
 
   const handleBuy = async () => {
     if (!asset?.tokenId || !auth.origin || !walletAddress) return
@@ -331,7 +341,7 @@ export default function AssetDetailPage() {
       const minBid = bids.length > 0 ? currentHighestBid + 0.01 : currentHighestBid
 
       if (parseFloat(bidAmount) < minBid) {
-        alert(`Bid must be at least ${minBid} CAMP`)
+        toast.error(`Bid must be at least ${minBid} CAMP`)
         return
       }
 
@@ -404,7 +414,7 @@ export default function AssetDetailPage() {
       })
 
       if (res.ok) {
-        alert("Bid placed successfully!")
+        toast.success("Bid placed successfully!")
         // Refresh bids
         const bidsRes = await fetch(`http://localhost:3001/assets/${id}/bids`)
         if (bidsRes.ok) {
@@ -420,11 +430,11 @@ export default function AssetDetailPage() {
         setBidAmount("")
       } else {
         const error = await res.json()
-        alert(`Failed to place bid: ${error.error}`)
+        toast.error(`Failed to place bid: ${error.error}`)
       }
     } catch (error) {
       console.error("Bid placement failed:", error)
-      alert("Failed to place bid. Please try again.")
+      toast.error("Failed to place bid. Please try again")
     } finally {
       setIsPlacingBid(false)
     }
@@ -437,15 +447,71 @@ export default function AssetDetailPage() {
     try {
       // 1. Transfer NFT ownership on-chain from creator to winner
       const creatorAddress = asset.creator.walletAddress as `0x${string}`
-      const tokenIdBigInt = BigInt(asset.tokenId!)
+      // 1. Trigger on-chain finalization (if not already done)
+      try {
+        const { FUSION_MARKETPLACE_ADDRESS, FUSION_MARKETPLACE_ABI } = await import('@/lib/fusionMarketplace')
+        const { encodeFunctionData } = await import('viem')
 
-      await auth.origin.transferFrom(
-        creatorAddress,
-        walletAddress as `0x${string}`,
-        tokenIdBigInt
-      )
+        // Multi-provider pattern
+        if (!window.ethereum) throw new Error("No wallet found")
 
-      // 2. Mark ownership as accepted in backend
+        let provider = window.ethereum as any
+        let targetAccount: string | undefined
+
+        if (provider.providers) {
+          for (const p of provider.providers) {
+            try {
+              const accounts = await p.request({ method: 'eth_accounts' })
+              if (accounts.some((a: string) => a.toLowerCase() === walletAddress.toLowerCase())) {
+                provider = p
+                targetAccount = accounts.find((a: string) => a.toLowerCase() === walletAddress.toLowerCase())
+                break
+              }
+            } catch (e) { console.warn(e) }
+          }
+        }
+
+        if (!targetAccount) {
+          try {
+            const accounts = await provider.request({ method: 'eth_requestAccounts' })
+            targetAccount = accounts.find((acc: string) => acc.toLowerCase() === walletAddress.toLowerCase())
+          } catch (e) { console.warn(e) }
+        }
+
+        if (targetAccount) {
+          const data = encodeFunctionData({
+            abi: FUSION_MARKETPLACE_ABI,
+            functionName: 'finalizeAuction',
+            args: [BigInt(id)]
+          })
+
+          const txHash = await provider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: targetAccount,
+              to: FUSION_MARKETPLACE_ADDRESS,
+              data: data
+            }],
+          })
+
+          console.log("Finalization transaction sent:", txHash)
+
+          // Wait for confirmation
+          let receipt = null
+          while (receipt === null) {
+            receipt = await provider.request({
+              method: 'eth_getTransactionReceipt',
+              params: [txHash],
+            })
+            if (receipt === null) await new Promise(r => setTimeout(r, 1000))
+          }
+        }
+      } catch (contractError: any) {
+        console.warn("Contract finalization skipped or failed (might be already finalized):", contractError)
+        // We continue to backend update even if contract call fails (e.g. already finalized by cron)
+      }
+
+      // 3. Mark ownership as accepted in backend
       const res = await fetch(`http://localhost:3001/assets/${id}/accept-ownership`, {
         method: "POST",
         headers: {
@@ -455,20 +521,22 @@ export default function AssetDetailPage() {
       })
 
       if (res.ok) {
-        alert("Ownership accepted successfully! The NFT has been transferred to you.")
+        toast.success("Ownership accepted successfully! The NFT has been transferred to you")
         // Refresh asset data
         const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
         if (assetRes.ok) {
           const assetData = await assetRes.json()
           setAsset(assetData)
         }
+        // Refresh access state (to show download button)
+        await checkAccess()
       } else {
         const error = await res.json()
-        alert(`Failed to accept ownership: ${error.error}`)
+        toast.error(`Failed to accept ownership: ${error.error}`)
       }
     } catch (error) {
       console.error("Ownership acceptance failed:", error)
-      alert("Failed to accept ownership. Please try again.")
+      toast.error("Failed to accept ownership. Please try again")
     } finally {
       setIsAcceptingOwnership(false)
     }
@@ -485,10 +553,10 @@ export default function AssetDetailPage() {
 
     setIsRequestingDeletion(true)
     try {
-      // TODO: Uncomment when requestDelete is available in Origin SDK types
-      // 1. Request deletion on-chain
-      // const tokenIdBigInt = BigInt(asset.tokenId!)
-      // await auth.origin.requestDelete(tokenIdBigInt)
+      // 1. Request deletion on-chain (finalizeDelete burns the token)
+      const tokenIdBigInt = BigInt(asset.tokenId!)
+      // @ts-ignore
+      await auth.origin.finalizeDelete(tokenIdBigInt)
 
       // 2. Mark deletion as requested in backend
       const res = await fetch(`http://localhost:3001/assets/${id}/request-deletion`, {
@@ -500,7 +568,7 @@ export default function AssetDetailPage() {
       })
 
       if (res.ok) {
-        alert("Deletion requested successfully! The asset will be removed on-chain.")
+        toast.success("Deletion requested successfully! The asset will be removed on-chain")
         // Refresh asset data
         const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
         if (assetRes.ok) {
@@ -509,11 +577,11 @@ export default function AssetDetailPage() {
         }
       } else {
         const error = await res.json()
-        alert(`Failed to request deletion: ${error.error}`)
+        toast.error(`Failed to request deletion: ${error.error}`)
       }
     } catch (error) {
       console.error("Deletion request failed:", error)
-      alert("Failed to request deletion. Please try again.")
+      toast.error("Failed to request deletion. Please try again")
     } finally {
       setIsRequestingDeletion(false)
     }
@@ -533,7 +601,7 @@ export default function AssetDetailPage() {
       })
 
       if (res.ok) {
-        alert("Refund claimed successfully! Funds have been returned to your wallet.")
+        toast.success("Refund claimed successfully! Funds have been returned to your wallet")
         // Refresh bids
         const bidsRes = await fetch(`http://localhost:3001/assets/${id}/bids`)
         if (bidsRes.ok) {
@@ -543,11 +611,11 @@ export default function AssetDetailPage() {
         }
       } else {
         const error = await res.json()
-        alert(`Failed to claim refund: ${error.error}`)
+        toast.error(`Failed to claim refund: ${error.error}`)
       }
     } catch (error) {
       console.error("Refund claim failed:", error)
-      alert("Failed to claim refund. Please try again.")
+      toast.error("Failed to claim refund. Please try again")
     } finally {
       setIsClaimingRefund(false)
     }

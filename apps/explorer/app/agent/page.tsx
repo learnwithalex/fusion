@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/navbar"
 import { AgentGlobe, Marker } from "@/components/agent-globe"
+import { AgentIconBar } from "@/components/agent-icon-bar"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -48,6 +49,7 @@ export default function AgentPage() {
     const [selectedEvent, setSelectedEvent] = useState<ScanningEvent | null>(null)
     const [isPlaying, setIsPlaying] = useState(true)
     const [timeProgress, setTimeProgress] = useState(100)
+    const [activeView, setActiveView] = useState("live")
     const [filters, setFilters] = useState({
         registered: true,
         mint: true,
@@ -165,6 +167,9 @@ export default function AgentPage() {
                     </div>
                 </div>
 
+                {/* Icon Bar */}
+                <AgentIconBar activeView={activeView} onViewChange={setActiveView} />
+
                 {/* Overlay UI */}
                 <div className="absolute inset-0 z-20 pointer-events-none">
                     <div className="h-full w-full max-w-[1800px] mx-auto px-6 py-8 flex flex-col justify-between">
@@ -192,8 +197,8 @@ export default function AgentPage() {
                                         >
                                             <div className="flex items-center gap-2 mb-1">
                                                 <div className={`h-2 w-2 rounded-full ${n.eventType === 'flagged' ? 'bg-red-500' :
-                                                        n.eventType === 'registered' ? 'bg-green-500' :
-                                                            'bg-blue-500'
+                                                    n.eventType === 'registered' ? 'bg-green-500' :
+                                                        'bg-blue-500'
                                                     }`} />
                                                 <span className="text-xs font-bold text-white uppercase">{n.eventType}</span>
                                                 <span className="text-[10px] text-muted-foreground ml-auto">{new Date(n.timestamp).toLocaleTimeString()}</span>

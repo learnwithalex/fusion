@@ -15,6 +15,7 @@ import { useState, useEffect } from "react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
+import { toast } from 'sonner'
 
 export default function EditProfilePage() {
     const { token } = useBackendAuth()
@@ -110,7 +111,7 @@ export default function EditProfilePage() {
             router.push("/profile")
         } catch (error) {
             console.error("Failed to update profile:", error)
-            alert("Failed to update profile")
+            toast.error("Failed to update profile")
         } finally {
             setSaving(false)
         }

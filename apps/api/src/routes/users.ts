@@ -128,6 +128,92 @@ router.get("/me/stats", authenticate, async (req, res) => {
     }
 });
 
+// Get current user's sales history
+router.get("/me/sales", authenticate, async (req, res) => {
+    const userId = req.user!.id;
+
+    try {
+        // Get all transactions where user sold something (their assets were bought)
+        const salesData = await db.select({
+            id: transactions.id,
+            assetId: assets.id,
+            assetName: assets.name,
+            buyerAddress: transactions.userAddress,
+            amount: transactions.amount,
+            transactionHash: transactions.transactionHash,
+            createdAt: transactions.createdAt
+        })
+            .from(transactions)
+            .innerJoin(assets, eq(transactions.assetId, assets.id))
+            .where(and(
+                eq(assets.userId, userId),
+                eq(transactions.transactionType, "bought")
+            ))
+            .orderBy(desc(transactions.createdAt));
+
+        res.json({
+            sales: salesData,
+            total: salesData.length
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch sales history" });
+    }
+});
+
+// Get current user's activity (all transactions)
+router.get("/me/activity", authenticate, async (req, res) => {
+    const userId = req.user!.id;
+    const { limit = "20", offset = "0", type } = req.query;
+
+    try {
+        // Build query for user's transactions
+        let query = db.select({
+            id: transactions.id,
+            transactionType: transactions.transactionType,
+            assetId: assets.id,
+            assetName: assets.name,
+            amount: transactions.amount,
+            from: sql<string>`COALESCE(${assets.userId}::text, 'system')`,
+            to: transactions.userAddress,
+            transactionHash: transactions.transactionHash,
+            blockNumber: sql<number>`0`, // Add when you have this field
+            status: transactions.status,
+            createdAt: transactions.createdAt
+        })
+            .from(transactions)
+            .leftJoin(assets, eq(transactions.assetId, assets.id))
+            .where(eq(transactions.userId, userId));
+
+        // Filter by type if specified
+        if (type && typeof type === 'string') {
+            // @ts-ignore
+            query = query.where(eq(transactions.transactionType, type));
+        }
+
+        const activities = await query
+            .orderBy(desc(transactions.createdAt))
+            .limit(parseInt(limit as string))
+            .offset(parseInt(offset as string));
+
+        // Get total count
+        const countResult = await db.select({ count: sql<number>`count(*)` })
+            .from(transactions)
+            .where(eq(transactions.userId, userId));
+
+        const total = Number(countResult[0]?.count || 0);
+
+        res.json({
+            activities,
+            total
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to fetch activity" });
+    }
+});
+
+
 // Get Public Profile by Wallet Address
 router.get("/:walletAddress", async (req, res) => {
     const { walletAddress } = req.params;

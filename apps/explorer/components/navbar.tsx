@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Wallet, Loader2, User, LogOut } from 'lucide-react'
+import { Search, Wallet, Loader2, User, LogOut, Zap } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -82,11 +82,11 @@ export function Navbar() {
   }, [searchQuery])
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/10 bg-background/80 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-2xl shadow-lg shadow-black/5">
       <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between gap-6 px-6">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-            <span className="font-bold text-white text-sm">IP</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500 to-violet-600">
+            <Zap className="h-5 w-5 text-white fill-white" />
           </div>
           <span className="text-xl font-bold">Fusion</span>
         </Link>

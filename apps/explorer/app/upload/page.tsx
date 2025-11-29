@@ -18,6 +18,7 @@ import Link from "next/link"
 import { Loader2, X } from "lucide-react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { createLicenseTerms } from "@campnetwork/origin"
+import { toast } from 'sonner'
 import { UploadButton } from "@/lib/uploadthing"
 
 
@@ -149,7 +150,7 @@ export default function UploadPage() {
         // Optional: clear localStorage if invalid
         localStorage.removeItem('toRemixId')
         localStorage.removeItem('toRemixTokenId')
-        alert("Parent Asset not found with this Token ID")
+        toast.error("Parent Asset not found with this Token ID")
       }
     } catch (error) {
       console.error("Failed to fetch parent asset:", error)
@@ -261,7 +262,7 @@ export default function UploadPage() {
 
       } catch (error) {
         console.error("Protocol fee payment failed:", error);
-        alert("Protocol fee payment failed. Please try again.");
+        toast.error("Protocol fee payment failed. Please try again");
         setIsMinting(false);
       }
 
@@ -323,7 +324,7 @@ export default function UploadPage() {
         console.log("Signature generated:", signature);
       } catch (error) {
         console.error("Signing failed:", error);
-        alert("Failed to sign verification message. Upload cancelled.");
+        toast.error("Failed to sign verification message. Upload cancelled");
         setIsMinting(false);
         return;
       }
@@ -331,7 +332,7 @@ export default function UploadPage() {
       // 4. Sync with Backend
       const endpoint = "http://localhost:3001/assets"
 
-      await fetch(endpoint, {
+      const res = await fetch("http://localhost:3001/assets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -363,18 +364,94 @@ export default function UploadPage() {
         })
       })
 
-      // 5. If bidding enabled, approve marketplace to transfer NFT
-      if (biddingEnabled && tokenId) {
+      const newAsset = await res.json()
+
+      // 5. If bidding enabled, approve marketplace AND create auction
+      if (biddingEnabled && tokenId && newAsset.id) {
         try {
-          const { FUSION_MARKETPLACE_ADDRESS } = await import('@/lib/fusionMarketplace')
+          const { FUSION_MARKETPLACE_ADDRESS, FUSION_MARKETPLACE_ABI } = await import('@/lib/fusionMarketplace')
+          const { encodeFunctionData } = await import('viem')
+
+          // a. Approve Marketplace
           await auth.origin.approve(
             FUSION_MARKETPLACE_ADDRESS,
             BigInt(tokenId)
           )
           console.log("NFT approved for marketplace")
+
+          // b. Create Auction on Contract
+          // createAuction(assetId, tokenId, startPrice, duration)
+          const startPriceWei = BigInt(Math.floor(parseFloat(biddingStartPrice) * 1e18))
+          const durationSeconds = BigInt(parseInt(biddingDuration) * 3600)
+
+          const data = encodeFunctionData({
+            abi: FUSION_MARKETPLACE_ABI,
+            functionName: 'createAuction',
+            args: [BigInt(newAsset.id), BigInt(tokenId), startPriceWei, durationSeconds]
+          })
+
+          // We need to send this transaction from the user's wallet
+          if (!window.ethereum) throw new Error("No wallet found for auction creation")
+
+          let provider = window.ethereum as any
+          let targetAccount: string | undefined
+
+          if (provider.providers) {
+            for (const p of provider.providers) {
+              try {
+                const accounts = await p.request({ method: 'eth_accounts' })
+                if (accounts.some((a: string) => a.toLowerCase() === walletAddress.toLowerCase())) {
+                  provider = p
+                  targetAccount = accounts.find((a: string) => a.toLowerCase() === walletAddress.toLowerCase())
+                  break
+                }
+              } catch (e) {
+                console.warn("Error checking provider:", e)
+              }
+            }
+          }
+
+          if (!targetAccount) {
+            try {
+              const accounts = await provider.request({ method: 'eth_requestAccounts' })
+              targetAccount = accounts.find((acc: string) => acc.toLowerCase() === walletAddress.toLowerCase())
+            } catch (e) {
+              console.warn("Error requesting accounts:", e)
+            }
+          }
+
+          if (!targetAccount) throw new Error("Wallet not connected")
+
+          const txHash = await provider.request({
+            method: 'eth_sendTransaction',
+            params: [{
+              from: targetAccount,
+              to: FUSION_MARKETPLACE_ADDRESS,
+              data: data
+            }],
+          })
+
+          console.log("Auction created on contract:", txHash)
+
         } catch (error) {
-          console.error("NFT approval failed:", error)
-          alert("Warning: NFT approval failed. Auction may not work correctly.")
+          console.error("Auction creation failed:", error)
+
+          // Rollback: Delete the asset from backend
+          try {
+            await fetch(`http://localhost:3001/assets/${newAsset.id}`, {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Bearer ${token}`
+              }
+            })
+            console.log("Asset creation rolled back due to auction failure")
+          } catch (rollbackError) {
+            console.error("Rollback failed:", rollbackError)
+          }
+
+          toast.error("Auction creation failed on blockchain. The asset upload has been cancelled. Please try again")
+          setIsMinting(false)
+          return // Stop execution, don't redirect
         }
       }
 
@@ -479,7 +556,7 @@ export default function UploadPage() {
                         if (res && res[0]) setThumbnailUrl(res[0].url)
                       }}
                       onUploadError={(error: Error) => {
-                        alert(`ERROR! ${error.message}`)
+                        toast.error(`Upload failed: ${error.message}`)
                       }}
                       appearance={{
                         button: "bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded-full",
@@ -515,7 +592,7 @@ export default function UploadPage() {
                         if (res && res[0]) setMarketingVideoUrl(res[0].url)
                       }}
                       onUploadError={(error: Error) => {
-                        alert(`ERROR! ${error.message}`)
+                        toast.error(`Upload failed: ${error.message}`)
                       }}
                       appearance={{
                         button: "bg-purple-500 hover:bg-purple-600 text-white text-sm px-4 py-2 rounded-full",
