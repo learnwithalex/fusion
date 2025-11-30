@@ -22,7 +22,7 @@ interface ActivityCardProps {
     }
 }
 
-const EXPLORER_URL = "https://basescan.org" // Update based on your network
+const EXPLORER_URL = "https://basecamp.cloud.blockscout.com" // Update based on your network
 
 const getTransactionTypeConfig = (type: string) => {
     switch (type.toLowerCase()) {

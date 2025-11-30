@@ -57,7 +57,13 @@ interface Asset {
 interface Activity {
   id: number
   transactionType: string
+  assetId?: number
+  assetName?: string | null
   amount: string
+  from: string | null
+  to: string
+  transactionHash: string
+  blockNumber?: number
   status: string
   createdAt: string
 }
@@ -621,25 +627,10 @@ export default function ProfilePage() {
               {activity.length > 0 ? (
                 <div className="space-y-4">
                   {activity.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 transition-colors hover:bg-white/10">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600/10 text-violet-400">
-                          {item.transactionType === 'bought' ? <Sparkles className="h-5 w-5" /> : <Upload className="h-5 w-5" />}
-                        </div>
-                        <div>
-                          <p className="font-medium text-white">
-                            {item.transactionType === 'bought' ? 'Purchased Asset' : 'Uploaded Asset'}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(item.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-white">{item.amount} CAMP</p>
-                        <p className="text-xs text-muted-foreground capitalize">{item.status}</p>
-                      </div>
-                    </div>
+                    <ActivityCard
+                      key={item.id}
+                      activity={item}
+                    />
                   ))}
                 </div>
               ) : (

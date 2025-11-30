@@ -138,13 +138,14 @@ router.get("/me/sales", authenticate, async (req, res) => {
             id: transactions.id,
             assetId: assets.id,
             assetName: assets.name,
-            buyerAddress: transactions.userAddress,
+            buyerAddress: users.walletAddress,
             amount: transactions.amount,
             transactionHash: transactions.tnxhash,
             createdAt: transactions.createdAt
         })
             .from(transactions)
             .innerJoin(assets, eq(transactions.assetId, assets.id))
+            .leftJoin(users, eq(transactions.userId, users.id))
             .where(and(
                 eq(assets.userId, userId),
                 eq(transactions.transactionType, "bought")
@@ -175,7 +176,7 @@ router.get("/me/activity", authenticate, async (req, res) => {
             assetName: assets.name,
             amount: transactions.amount,
             from: sql<string>`COALESCE(${assets.userId}::text, 'system')`,
-            to: transactions.userAddress,
+            to: users.walletAddress,
             transactionHash: transactions.tnxhash,
             blockNumber: sql<number>`0`, // Add when you have this field
             status: transactions.status,
@@ -183,6 +184,7 @@ router.get("/me/activity", authenticate, async (req, res) => {
         })
             .from(transactions)
             .leftJoin(assets, eq(transactions.assetId, assets.id))
+            .leftJoin(users, eq(transactions.userId, users.id))
             .where(eq(transactions.userId, userId));
 
         // Filter by type if specified

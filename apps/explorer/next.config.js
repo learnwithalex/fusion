@@ -7,8 +7,37 @@ const nextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
-  turbopack: {
-    root: "../..",
+  serverExternalPackages: ['pino', 'thread-stream'],
+  turbopack: {},
+  webpack: (config, { isServer, webpack }) => {
+    // Ignore test files and directories
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        checkResource(resource) {
+          return (
+            resource.includes('/test/') ||
+            resource.includes('test/') ||
+            resource.endsWith('.test.js') ||
+            resource.endsWith('.test.mjs') ||
+            resource.endsWith('.spec.js') ||
+            resource.endsWith('bench.js')
+          );
+        },
+      })
+    );
+
+    // If client-side, replace server-only packages with empty module
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'pino': false,
+        'thread-stream': false,
+        'pino-pretty': false,
+        'tap': false,
+      };
+    }
+
+    return config;
   },
 };
 

@@ -339,7 +339,7 @@ export default function AssetDetailPage() {
     setIsPlacingBid(true)
     try {
       // 1. Validate bid amount
-      const currentHighestBid = bids.length > 0 ? parseFloat(bids[0].bid.amount) : parseFloat(asset.biddingStartPrice || "0")
+      const currentHighestBid = (bids.length > 0 && bids[0]?.bid?.amount) ? parseFloat(bids[0].bid.amount) : parseFloat(asset?.biddingStartPrice || "0")
       const minBid = bids.length > 0 ? currentHighestBid + 0.01 : currentHighestBid
 
       if (parseFloat(bidAmount) < minBid) {
@@ -993,11 +993,11 @@ export default function AssetDetailPage() {
                         </p>
                         <div className="flex items-baseline gap-2">
                           <p className="text-3xl font-bold text-white">
-                            {bids.length > 0 ? bids[0].bid.amount : asset.biddingStartPrice}
+                            {(bids.length > 0 && bids[0]?.bid?.amount) ? bids[0].bid.amount : asset?.biddingStartPrice || "0"}
                           </p>
                           <span className="text-violet-400 font-medium">CAMP</span>
                         </div>
-                        {bids.length > 0 && bids[0].user && (
+                        {bids.length > 0 && bids[0]?.user && (
                           <p className="text-xs text-violet-300/50 mt-2 flex items-center gap-1">
                             <User className="w-3 h-3" />
                             by {bids[0].user.name || bids[0].user.walletAddress.slice(0, 6) + '...' + bids[0].user.walletAddress.slice(-4)}
@@ -1014,21 +1014,21 @@ export default function AssetDetailPage() {
                               id="bid-amount"
                               type="number"
                               step="0.01"
-                              placeholder={`Min: ${bids.length > 0 ? (parseFloat(bids[0].bid.amount) + 0.01).toFixed(2) : asset.biddingStartPrice || "0"}`}
+                              placeholder={`Min: ${(bids.length > 0 && bids[0]?.bid?.amount) ? (parseFloat(bids[0].bid.amount) + 0.01).toFixed(2) : asset?.biddingStartPrice || "0"}`}
                               value={bidAmount}
                               onChange={(e) => setBidAmount(e.target.value)}
                               className="h-12 bg-white/5 border-white/10 focus:border-violet-500/50 focus:ring-violet-500/20 text-lg"
                             />
                             <Button
                               onClick={handlePlaceBid}
-                              disabled={isPlacingBid || !bidAmount || (bids.length > 0 && bids[0].user?.walletAddress.toLowerCase() === walletAddress?.toLowerCase())}
+                              disabled={isPlacingBid || !bidAmount || (bids.length > 0 && bids[0]?.user?.walletAddress?.toLowerCase() === walletAddress?.toLowerCase())}
                               className="h-12 px-6 gap-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 shadow-lg shadow-violet-500/20"
                             >
                               {isPlacingBid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gavel className="h-4 w-4" />}
                               Place Bid
                             </Button>
                           </div>
-                          {bids.length > 0 && bids[0].user?.walletAddress.toLowerCase() === walletAddress?.toLowerCase() && (
+                          {bids.length > 0 && bids[0]?.user?.walletAddress?.toLowerCase() === walletAddress?.toLowerCase() && (
                             <p className="text-xs text-green-400 flex items-center gap-1">
                               <Check className="w-3 h-3" /> You are the current highest bidder
                             </p>
