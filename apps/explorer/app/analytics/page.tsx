@@ -82,7 +82,7 @@ export default function AnalyticsPage() {
     const fetchData = async () => {
         try {
             // Fetch Protocol Stats
-            const statsRes = await fetch('http://localhost:3001/stats')
+            const statsRes = await fetch('https://api-fusion.solume.cloud/stats')
             if (statsRes.ok) {
                 const statsData = await statsRes.json()
                 setStats(statsData)

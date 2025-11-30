@@ -56,7 +56,7 @@ export default function UploadPage() {
 
       if (parentId && parentTokenId) {
         try {
-          const res = await fetch(`http://localhost:3001/assets/${parentId}`)
+          const res = await fetch(`https://api-fusion.solume.cloud/assets/${parentId}`)
           const data = await res.json()
           if (data && data.name) {
             setRemixParent({
@@ -114,7 +114,7 @@ export default function UploadPage() {
     }
 
     try {
-      const res = await fetch(`http://localhost:3001/assets?tokenId=${tokenId}`)
+      const res = await fetch(`https://api-fusion.solume.cloud/assets?tokenId=${tokenId}`)
       const data = await res.json()
       if (data && data.length > 0) {
         const asset = data[0]
@@ -330,9 +330,9 @@ export default function UploadPage() {
       }
 
       // 4. Sync with Backend
-      const endpoint = "http://localhost:3001/assets"
+      const endpoint = "https://api-fusion.solume.cloud/assets"
 
-      const res = await fetch("http://localhost:3001/assets", {
+      const res = await fetch("https://api-fusion.solume.cloud/assets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -438,7 +438,7 @@ export default function UploadPage() {
 
           // Rollback: Delete the asset from backend
           try {
-            await fetch(`http://localhost:3001/assets/${newAsset.id}`, {
+            await fetch(`https://api-fusion.solume.cloud/assets/${newAsset.id}`, {
               method: "DELETE",
               headers: {
                 "Authorization": `Bearer ${token}`

@@ -144,7 +144,7 @@ export default function AssetDetailPage() {
   useEffect(() => {
     const fetchAsset = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/assets/${id}`)
+        const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
         if (res.ok) {
           const data = await res.json()
           setAsset(data)
@@ -165,7 +165,7 @@ export default function AssetDetailPage() {
       if (!token) return
 
       try {
-        const res = await fetch('http://localhost:3001/users/me', {
+        const res = await fetch('https://api-fusion.solume.cloud/users/me', {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         if (res.ok) {
@@ -186,7 +186,7 @@ export default function AssetDetailPage() {
       if (!asset?.biddingEnabled) return
 
       try {
-        const res = await fetch(`http://localhost:3001/assets/${id}/bids`)
+        const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/bids`)
         if (res.ok) {
           const data = await res.json()
           setBids(data)
@@ -312,7 +312,7 @@ export default function AssetDetailPage() {
 
         // Record transaction in backend
         if (token) {
-          await fetch(`http://localhost:3001/assets/${id}/buy`, {
+          await fetch(`https://api-fusion.solume.cloud/assets/${id}/buy`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -403,7 +403,7 @@ export default function AssetDetailPage() {
       })
 
       // 4. Submit bid to backend
-      const res = await fetch(`http://localhost:3001/assets/${id}/bid`, {
+      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/bid`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -418,13 +418,13 @@ export default function AssetDetailPage() {
       if (res.ok) {
         toast.success("Bid placed successfully!")
         // Refresh bids
-        const bidsRes = await fetch(`http://localhost:3001/assets/${id}/bids`)
+        const bidsRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}/bids`)
         if (bidsRes.ok) {
           const bidsData = await bidsRes.json()
           setBids(bidsData)
         }
         // Refresh asset to get updated status
-        const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
+        const assetRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
         if (assetRes.ok) {
           const assetData = await assetRes.json()
           setAsset(assetData)
@@ -514,7 +514,7 @@ export default function AssetDetailPage() {
       }
 
       // 3. Mark ownership as accepted in backend
-      const res = await fetch(`http://localhost:3001/assets/${id}/accept-ownership`, {
+      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/accept-ownership`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -525,7 +525,7 @@ export default function AssetDetailPage() {
       if (res.ok) {
         toast.success("Ownership accepted successfully! The NFT has been transferred to you")
         // Refresh asset data
-        const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
+        const assetRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
         if (assetRes.ok) {
           const assetData = await assetRes.json()
           setAsset(assetData)
@@ -561,7 +561,7 @@ export default function AssetDetailPage() {
       await auth.origin.finalizeDelete(tokenIdBigInt)
 
       // 2. Mark deletion as requested in backend
-      const res = await fetch(`http://localhost:3001/assets/${id}/request-deletion`, {
+      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/request-deletion`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -572,7 +572,7 @@ export default function AssetDetailPage() {
       if (res.ok) {
         toast.success("Deletion requested successfully! The asset will be removed on-chain")
         // Refresh asset data
-        const assetRes = await fetch(`http://localhost:3001/assets/${id}`)
+        const assetRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
         if (assetRes.ok) {
           const assetData = await assetRes.json()
           setAsset(assetData)
@@ -594,7 +594,7 @@ export default function AssetDetailPage() {
 
     setIsClaimingRefund(true)
     try {
-      const res = await fetch(`http://localhost:3001/assets/${id}/claim-refund`, {
+      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/claim-refund`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -605,7 +605,7 @@ export default function AssetDetailPage() {
       if (res.ok) {
         toast.success("Refund claimed successfully! Funds have been returned to your wallet")
         // Refresh bids
-        const bidsRes = await fetch(`http://localhost:3001/assets/${id}/bids`)
+        const bidsRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}/bids`)
         if (bidsRes.ok) {
           const bidsData = await bidsRes.json()
           setBids(bidsData)

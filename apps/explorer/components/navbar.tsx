@@ -60,8 +60,8 @@ export function Navbar() {
       if (searchQuery.length > 1) {
         try {
           const [assetsRes, usersRes] = await Promise.all([
-            fetch(`http://localhost:3001/assets?search=${encodeURIComponent(searchQuery)}`),
-            fetch(`http://localhost:3001/users?search=${encodeURIComponent(searchQuery)}`)
+            fetch(`https://api-fusion.solume.cloud/assets?search=${encodeURIComponent(searchQuery)}`),
+            fetch(`https://api-fusion.solume.cloud/users?search=${encodeURIComponent(searchQuery)}`)
           ])
 
           const assets = await assetsRes.json()

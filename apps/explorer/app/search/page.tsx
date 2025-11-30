@@ -34,8 +34,8 @@ export default function SearchPage() {
             setLoading(true)
             try {
                 const [assetsRes, usersRes] = await Promise.all([
-                    fetch(`http://localhost:3001/assets?search=${encodeURIComponent(query || "")}`),
-                    fetch(`http://localhost:3001/users?search=${encodeURIComponent(query || "")}`)
+                    fetch(`https://api-fusion.solume.cloud/assets?search=${encodeURIComponent(query || "")}`),
+                    fetch(`https://api-fusion.solume.cloud/users?search=${encodeURIComponent(query || "")}`)
                 ])
 
                 const assets = await assetsRes.json()

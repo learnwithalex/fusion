@@ -62,7 +62,7 @@ export default function EditProfilePage() {
 
     const fetchProfile = async () => {
         try {
-            const res = await fetch("http://localhost:3001/users/me", {
+            const res = await fetch("https://api-fusion.solume.cloud/users/me", {
                 headers: { "Authorization": `Bearer ${token}` }
             })
             const data = await res.json()
@@ -89,7 +89,7 @@ export default function EditProfilePage() {
 
         setSaving(true)
         try {
-            await fetch("http://localhost:3001/users/me", {
+            await fetch("https://api-fusion.solume.cloud/users/me", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

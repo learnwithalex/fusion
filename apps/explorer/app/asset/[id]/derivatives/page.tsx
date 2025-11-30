@@ -36,14 +36,14 @@ export default function DerivativesPage() {
         const fetchData = async () => {
             try {
                 // Fetch parent asset for the title
-                const parentRes = await fetch(`http://localhost:3001/assets/${id}`)
+                const parentRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
                 if (parentRes.ok) {
                     const parentData = await parentRes.json()
                     setParentAsset(parentData)
                 }
 
                 // Fetch derivatives
-                const derivativesRes = await fetch(`http://localhost:3001/assets?remixOf=${id}`)
+                const derivativesRes = await fetch(`https://api-fusion.solume.cloud/assets?remixOf=${id}`)
                 if (derivativesRes.ok) {
                     const derivativesData = await derivativesRes.json()
                     setDerivatives(derivativesData)

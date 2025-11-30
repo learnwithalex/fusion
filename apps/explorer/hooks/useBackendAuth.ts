@@ -50,7 +50,7 @@ export function useBackendAuth() {
 
         try {
             // 1. Get Nonce
-            const nonceRes = await fetch('http://localhost:3001/auth/nonce', {
+            const nonceRes = await fetch('https://api-fusion.solume.cloud/auth/nonce', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ walletAddress: address }),
@@ -106,7 +106,7 @@ export function useBackendAuth() {
             });
 
             // 3. Verify & Login
-            const verifyRes = await fetch('http://localhost:3001/auth/verify', {
+            const verifyRes = await fetch('https://api-fusion.solume.cloud/auth/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

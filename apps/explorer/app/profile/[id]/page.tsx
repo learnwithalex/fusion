@@ -93,7 +93,7 @@ export default function PublicProfilePage() {
 
     const fetchProfile = async () => {
         try {
-            const res = await fetch(`http://localhost:3001/users/${profileId}`)
+            const res = await fetch(`https://api-fusion.solume.cloud/users/${profileId}`)
             if (!res.ok) throw new Error("Failed to fetch profile")
             const data = await res.json()
             setProfile(data)
@@ -110,7 +110,7 @@ export default function PublicProfilePage() {
 
     const fetchUploads = async (userId: number) => {
         try {
-            const res = await fetch(`http://localhost:3001/assets?userId=${userId}&sort=recent`)
+            const res = await fetch(`https://api-fusion.solume.cloud/assets?userId=${userId}&sort=recent`)
             const data = await res.json()
             setUploads(data)
         } catch (error) {
@@ -120,7 +120,7 @@ export default function PublicProfilePage() {
 
     const fetchLicensedItems = async (userId: number) => {
         try {
-            const res = await fetch(`http://localhost:3001/users/${userId}/assets/licensed`)
+            const res = await fetch(`https://api-fusion.solume.cloud/users/${userId}/assets/licensed`)
             const data = await res.json()
             setLicensedItems(data)
         } catch (error) {
@@ -130,7 +130,7 @@ export default function PublicProfilePage() {
 
     const fetchActivity = async (userId: number) => {
         try {
-            const res = await fetch(`http://localhost:3001/users/${userId}/activity`)
+            const res = await fetch(`https://api-fusion.solume.cloud/users/${userId}/activity`)
             const data = await res.json()
             setActivity(data)
         } catch (error) {

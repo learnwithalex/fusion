@@ -54,7 +54,7 @@ export default function HomePage() {
 
   const fetchAssets = async () => {
     try {
-      const res = await fetch('http://localhost:3001/assets')
+      const res = await fetch('https://api-fusion.solume.cloud/assets')
       if (res.ok) {
         const data = await res.json()
         // Filter out drafts and concluded auctions

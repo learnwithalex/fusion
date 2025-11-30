@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:3001/users/me", {
+      const res = await fetch("https://api-fusion.solume.cloud/users/me", {
         headers: { "Authorization": `Bearer ${token}` }
       })
       const data = await res.json()
@@ -140,7 +140,7 @@ export default function ProfilePage() {
 
   const fetchStats = async () => {
     try {
-      const res = await fetch("http://localhost:3001/users/me/stats", {
+      const res = await fetch("https://api-fusion.solume.cloud/users/me/stats", {
         headers: { "Authorization": `Bearer ${token}` }
       })
       const data = await res.json()
@@ -152,7 +152,7 @@ export default function ProfilePage() {
 
   const fetchUploads = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:3001/assets?userId=${userId}&sort=recent`)
+      const res = await fetch(`https://api-fusion.solume.cloud/assets?userId=${userId}&sort=recent`)
       const data = await res.json()
       setUploads(data)
     } catch (error) {
@@ -162,7 +162,7 @@ export default function ProfilePage() {
 
   const fetchLicensedItems = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:3001/users/${userId}/assets/licensed`)
+      const res = await fetch(`https://api-fusion.solume.cloud/users/${userId}/assets/licensed`)
       const data = await res.json()
       setLicensedItems(data)
     } catch (error) {
@@ -172,7 +172,7 @@ export default function ProfilePage() {
 
   const fetchActivity = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:3001/users/me/activity?limit=20`, {
+      const res = await fetch(`https://api-fusion.solume.cloud/users/me/activity?limit=20`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
