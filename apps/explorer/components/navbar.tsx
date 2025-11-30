@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useAuth, useAuthState, useConnect } from "@campnetwork/origin/react";
 import { useState, useEffect } from "react";
 import { useBackendAuth } from "@/hooks/useBackendAuth";
+import { toast } from "sonner";
 
 export function Navbar() {
   const auth = useAuth();
@@ -15,9 +16,19 @@ export function Navbar() {
   const { login, logout, walletAddress, isAuthenticated, isAuthenticating } = useBackendAuth();
 
   const handleConnect = async () => {
-    const result = await connect()
-    if (result.success) {
-      await login(result.walletAddress)
+    if (typeof window !== 'undefined' && !window.ethereum) {
+      toast.error("No wallet detected. Please install MetaMask or another wallet.")
+      return
+    }
+
+    try {
+      const result = await connect()
+      if (result.success) {
+        await login(result.walletAddress)
+      }
+    } catch (error) {
+      console.error("Connection failed:", error)
+      toast.error("Failed to connect wallet. Please try again.")
     }
   }
 
