@@ -8,7 +8,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
     "dev:api": "pnpm --filter api dev",
-    "start": "pnpm --filter api start"
+    "start": "pnpm --filter api start",
+    "run:explorer": "pnpm --filter explorer start"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
