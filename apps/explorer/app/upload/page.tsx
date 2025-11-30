@@ -854,7 +854,7 @@ export default function UploadPage() {
                       className="h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-500 focus:border-violet-600/50 focus:ring-violet-600/20"
                       defaultValue={remixParent?.tokenId || ""}
                       onBlur={handleParentTokenIdBlur}
-                      disabled={!!localStorage.getItem('toRemixId')}
+                      disabled={!!remixParent}
                     />
                   </div>
 
