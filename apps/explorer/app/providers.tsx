@@ -16,13 +16,9 @@ export function Providers({ children }: { children: ReactNode }) {
     setMounted(true);
   }, []);
 
-  // Don't render CampProvider until mounted to avoid SSR issues with window.ethereum
+  // Don't render anything until mounted to avoid SSR issues with window.ethereum
   if (!mounted) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
+    return null;
   }
 
   return (
