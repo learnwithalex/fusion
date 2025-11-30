@@ -220,34 +220,36 @@ export function Navbar() {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
-            <Link href="/dashboard">Docs</Link>
-          </Button>
+        {!showCampModal && (
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+              <Link href="/dashboard">Docs</Link>
+            </Button>
 
-          <Button
-            variant="outline"
-            className={`gap-2 rounded-full border-border/20 bg-white/5 backdrop-blur-md transition-all ${isAuthenticated
-              ? "hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400"
-              : "hover:bg-white/10 hover:border-white/20"
-              }`}
-            onClick={() => isAuthenticated ? handleDisconnect() : handleConnect()}
-            disabled={loading || isAuthenticating}
-            onMouseEnter={() => setIsHoveringWallet(true)}
-            onMouseLeave={() => setIsHoveringWallet(false)}
-          >
-            {loading || isAuthenticating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : isAuthenticated ? (
-              isHoveringWallet ? <LogOut className="h-4 w-4" /> : <User className="h-4 w-4" />
-            ) : (
-              <Wallet className="h-4 w-4" />
-            )}
-            {loading ? "Connecting..." : isAuthenticating ? "Verifying..." : isAuthenticated ? (
-              isHoveringWallet ? "Disconnect" : (walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connected")
-            ) : "Connect Wallet"}
-          </Button>
-        </div>
+            <Button
+              variant="outline"
+              className={`gap-2 rounded-full border-border/20 bg-white/5 backdrop-blur-md transition-all ${isAuthenticated
+                ? "hover:bg-red-500/10 hover:border-red-500/20 hover:text-red-400"
+                : "hover:bg-white/10 hover:border-white/20"
+                }`}
+              onClick={() => isAuthenticated ? handleDisconnect() : handleConnect()}
+              disabled={loading || isAuthenticating}
+              onMouseEnter={() => setIsHoveringWallet(true)}
+              onMouseLeave={() => setIsHoveringWallet(false)}
+            >
+              {loading || isAuthenticating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isAuthenticated ? (
+                isHoveringWallet ? <LogOut className="h-4 w-4" /> : <User className="h-4 w-4" />
+              ) : (
+                <Wallet className="h-4 w-4" />
+              )}
+              {loading ? "Connecting..." : isAuthenticating ? "Verifying..." : isAuthenticated ? (
+                isHoveringWallet ? "Disconnect" : (walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connected")
+              ) : "Connect Wallet"}
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Show CampModal when connection fails */}
