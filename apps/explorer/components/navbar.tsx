@@ -4,7 +4,7 @@ import { Search, Wallet, Loader2, User, LogOut, Zap } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useAuth, useAuthState, useConnect } from "@campnetwork/origin/react";
+import { useAuth, useAuthState, useConnect, CampModal } from "@campnetwork/origin/react";
 import { useState, useEffect } from "react";
 import { useBackendAuth } from "@/hooks/useBackendAuth";
 import { toast } from "sonner";
@@ -14,6 +14,7 @@ export function Navbar() {
   const { authenticated: isWalletConnected, loading } = useAuthState();
   const { connect, disconnect } = useConnect();
   const { login, logout, walletAddress, isAuthenticated, isAuthenticating } = useBackendAuth();
+  const [showCampModal, setShowCampModal] = useState(false);
 
   const handleConnect = async () => {
     if (typeof window !== 'undefined' && !window.ethereum) {
@@ -28,9 +29,28 @@ export function Navbar() {
       }
     } catch (error) {
       console.error("Connection failed:", error)
-      toast.error("Failed to connect wallet. Please try again.")
+
+      // Fallback: Show CampModal component
+      setShowCampModal(true)
     }
   }
+
+  // Listen for successful authentication from CampModal
+  useEffect(() => {
+    const handleModalAuth = async () => {
+      if (showCampModal && isWalletConnected) {
+        // After CampModal connects, use connect() to get the address
+        const result = await connect()
+        if (result.success) {
+          await login(result.walletAddress)
+          toast.success("Wallet connected successfully!")
+          setShowCampModal(false)
+        }
+      }
+    }
+
+    handleModalAuth()
+  }, [showCampModal, isWalletConnected])
 
   const handleDisconnect = async () => {
     await disconnect()
@@ -229,6 +249,9 @@ export function Navbar() {
           </Button>
         </div>
       </div>
+
+      {/* Show CampModal when connection fails */}
+      {showCampModal && <CampModal />}
     </nav>
   )
 }
