@@ -5,8 +5,11 @@ import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
 import assetRoutes from "./routes/assets";
 import statsRoutes from "./routes/stats";
+import agentRoutes from "./routes/agent";
+import notificationRoutes from "./routes/notifications";
 
 import { startAuctionFinalizationCron } from "./cron/auctionFinalization";
+import { startFingerprintScannerCron } from "./jobs/fingerprint-scanner";
 
 dotenv.config();
 
@@ -21,6 +24,8 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/assets", assetRoutes);
 app.use("/stats", statsRoutes);
+app.use("/agent", agentRoutes);
+app.use("/notifications", notificationRoutes);
 
 app.get("/", (req, res) => {
   res.send("Fusion API is running");
@@ -29,4 +34,5 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
   startAuctionFinalizationCron();
+  startFingerprintScannerCron();
 });

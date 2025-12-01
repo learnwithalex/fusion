@@ -60,6 +60,10 @@ export const assets = pgTable("assets", {
     biddingStatus: text("bidding_status").default("pending"), // pending, active, ended, completed
     ownershipAccepted: boolean("ownership_accepted").default(false),
     deletionRequested: boolean("deletion_requested").default(false),
+    // Agent status fields
+    status: varchar("status", { length: 50 }).default("active"), // active, flagged, under_review
+    flaggedAt: timestamp("flagged_at"),
+    flaggedReason: text("flagged_reason"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -112,6 +116,50 @@ export const bids = pgTable("bids", {
     amount: decimal("amount", { precision: 18, scale: 8 }).notNull(),
     tnxhash: text("tnxhash"),
     status: text("status").default("active"), // active, outbid, won, cancelled
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Agent System Tables
+export const assetFingerprints = pgTable("asset_fingerprints", {
+    id: serial("id").primaryKey(),
+    assetId: integer("asset_id").references(() => assets.id).notNull(),
+    fingerprint: varchar("fingerprint", { length: 255 }).notNull(),
+    algorithm: varchar("algorithm", { length: 50 }).notNull(), // sha256, perceptual-hash
+    fileSize: text("file_size"),
+    mimeType: varchar("mime_type", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const uploadMetadata = pgTable("upload_metadata", {
+    id: serial("id").primaryKey(),
+    assetId: integer("asset_id").references(() => assets.id).notNull(),
+    ipAddress: varchar("ip_address", { length: 45 }), // IPv6 compatible
+    country: varchar("country", { length: 2 }), // ISO country code
+    city: varchar("city", { length: 100 }),
+    userAgent: text("user_agent"),
+    uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+export const agentScans = pgTable("agent_scans", {
+    id: serial("id").primaryKey(),
+    assetId: integer("asset_id").references(() => assets.id).notNull(),
+    scanType: varchar("scan_type", { length: 50 }).notNull(), // fingerprint, metadata
+    status: varchar("status", { length: 50 }).notNull(), // pending, scanning, completed, flagged
+    matchedAssetId: integer("matched_asset_id").references(() => assets.id),
+    similarity: decimal("similarity", { precision: 5, scale: 2 }), // 0-100%
+    flagReason: text("flag_reason"),
+    scannedAt: timestamp("scanned_at").defaultNow(),
+    completedAt: timestamp("completed_at"),
+});
+
+export const notifications = pgTable("notifications", {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id").references(() => users.id).notNull(),
+    type: varchar("type", { length: 50 }).notNull(), // flagged_content, duplicate_found, scan_complete
+    title: varchar("title", { length: 255 }).notNull(),
+    message: text("message").notNull(),
+    assetId: integer("asset_id").references(() => assets.id),
+    read: boolean("read").default(false),
     createdAt: timestamp("created_at").defaultNow(),
 });
 

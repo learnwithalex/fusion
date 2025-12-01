@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db";
-import { assets, licenses, transactions, assetFiles, assetMetadata, users, bids } from "../db/schema";
+import { assets, licenses, transactions, assetFiles, assetMetadata, users, bids, uploadMetadata } from "../db/schema";
 import { eq, like, and, gte, lte, desc, sql, inArray } from "drizzle-orm";
 
 const router = Router();
@@ -207,6 +207,19 @@ router.post("/", authenticate, async (req, res) => {
                 await db.update(assets).set({ licenseId: newLicense.id }).where(eq(assets.id, newAsset.id));
             }
         }
+
+        // 5. Capture Upload Metadata (IP, User Agent, etc.)
+        const ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress || '';
+        const userAgent = req.headers['user-agent'] || '';
+
+        // Note: For country/city, you'd need a geoip library like geoip-lite
+        // For now, we'll store IP and can add geolocation later
+        await db.insert(uploadMetadata).values({
+            assetId: newAsset.id,
+            ipAddress,
+            userAgent,
+            // country and city can be added when geoip-lite is installed
+        });
 
         res.json(newAsset);
     } catch (error) {

@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Globe, Play, Pause, Filter } from 'lucide-react'
 import { useEffect, useState, useRef } from "react"
-import { AgentInfo, AgentStats } from "@/components/agent-info"
 
 // Extended event type
 interface ScanningEvent {
@@ -58,39 +57,6 @@ export default function AgentPage() {
         royalty: true
     })
     const globeRef = useRef<any>(null)
-
-    // Real API data
-    const [stats, setStats] = useState<any>(null)
-    const [activity, setActivity] = useState<any>(null)
-
-    // Fetch real data from API
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [statsRes, activityRes] = await Promise.all([
-                    fetch('https://api-fusion.solume.cloud/agent/stats'),
-                    fetch('https://api-fusion.solume.cloud/agent/activity')
-                ])
-
-                if (statsRes.ok) {
-                    const statsData = await statsRes.json()
-                    setStats(statsData)
-                }
-
-                if (activityRes.ok) {
-                    const activityData = await activityRes.json()
-                    setActivity(activityData)
-                }
-            } catch (error) {
-                console.error('Error fetching agent data:', error)
-            }
-        }
-
-        fetchData()
-        // Refresh every 10 seconds
-        const interval = setInterval(fetchData, 10000)
-        return () => clearInterval(interval)
-    }, [])
 
     // Initial data population
     useEffect(() => {
@@ -182,9 +148,6 @@ export default function AgentPage() {
     return (
         <div className="min-h-screen bg-black overflow-hidden flex flex-col">
             <Navbar />
-
-            <AgentInfo />
-            <AgentStats stats={stats} activity={activity} />
 
             <main className="flex-1 relative">
                 {/* Background Gradients */}
