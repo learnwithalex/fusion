@@ -87,6 +87,8 @@ export default function ProfilePage() {
   const auth = useAuth()
   const [royalties, setRoyalties] = useState<Record<number, string>>({})
   const [claiming, setClaiming] = useState<number | null>(null)
+  const [chartData, setChartData] = useState<{ date: string; amount: number }[]>([])
+  const [chartPeriod, setChartPeriod] = useState<'7D' | '30D' | 'ALL'>('30D')
 
   useEffect(() => {
     if (uploads.length > 0 && auth.origin) {
@@ -130,6 +132,7 @@ export default function ProfilePage() {
         fetchUploads(data.id)
         fetchLicensedItems(data.id)
         fetchActivity(data.id)
+        fetchChartData(data.id)
       }
     } catch (error) {
       console.error("Failed to fetch profile:", error)
@@ -184,6 +187,32 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Failed to fetch activity:", error)
+    }
+  }
+
+  const fetchChartData = async (userId: number) => {
+    try {
+      const res = await fetch(`https://api-fusion.solume.cloud/users/${userId}/earnings-history?period=${chartPeriod}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      if (res.ok) {
+        const data = await res.json()
+        // Transform data for chart
+        const transformed = data.map((item: any) => ({
+          date: new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          amount: parseFloat(item.amount)
+        }))
+        setChartData(transformed)
+      } else {
+        // Fallback to empty array if endpoint doesn't exist yet
+        setChartData([])
+      }
+    } catch (error) {
+      console.error("Failed to fetch chart data:", error)
+      setChartData([])
     }
   }
 
@@ -490,38 +519,66 @@ export default function ProfilePage() {
                       <p className="text-sm text-muted-foreground">Your rewards performance over time</p>
                     </div>
                     <div className="flex gap-2">
-                      <Badge variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer">7D</Badge>
-                      <Badge variant="outline" className="bg-violet-600/20 border-violet-600/50 text-violet-400 cursor-pointer">30D</Badge>
-                      <Badge variant="outline" className="bg-white/5 border-white/10 text-white hover:bg-white/10 cursor-pointer">ALL</Badge>
+                      <Badge
+                        variant="outline"
+                        className={`cursor-pointer ${chartPeriod === '7D' ? 'bg-violet-600/20 border-violet-600/50 text-violet-400' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                        onClick={() => {
+                          setChartPeriod('7D')
+                          if (profile?.id) fetchChartData(profile.id)
+                        }}
+                      >
+                        7D
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`cursor-pointer ${chartPeriod === '30D' ? 'bg-violet-600/20 border-violet-600/50 text-violet-400' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                        onClick={() => {
+                          setChartPeriod('30D')
+                          if (profile?.id) fetchChartData(profile.id)
+                        }}
+                      >
+                        30D
+                      </Badge>
+                      <Badge
+                        variant="outline"
+                        className={`cursor-pointer ${chartPeriod === 'ALL' ? 'bg-violet-600/20 border-violet-600/50 text-violet-400' : 'bg-white/5 border-white/10 text-white hover:bg-white/10'}`}
+                        onClick={() => {
+                          setChartPeriod('ALL')
+                          if (profile?.id) fetchChartData(profile.id)
+                        }}
+                      >
+                        ALL
+                      </Badge>
                     </div>
                   </div>
                   <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={[
-                        { date: 'Jan 1', amount: 120 },
-                        { date: 'Jan 5', amount: 350 },
-                        { date: 'Jan 10', amount: 280 },
-                        { date: 'Jan 15', amount: 590 },
-                        { date: 'Jan 20', amount: 450 },
-                        { date: 'Jan 25', amount: 890 },
-                        { date: 'Jan 30', amount: 1200 },
-                      ]}>
-                        <defs>
-                          <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                        <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
-                        <Tooltip
-                          contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                          itemStyle={{ color: '#fff' }}
-                        />
-                        <Area type="monotone" dataKey="amount" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {chartData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartData}>
+                          <defs>
+                            <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                          <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}`} />
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                            itemStyle={{ color: '#fff' }}
+                          />
+                          <Area type="monotone" dataKey="amount" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center">
+                          <Coins className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                          <p className="text-sm text-muted-foreground">No earnings data available yet</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

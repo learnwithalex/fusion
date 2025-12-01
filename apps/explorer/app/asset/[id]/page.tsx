@@ -8,8 +8,7 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Music, ImageIcon, Video, Gamepad2, Clock, Shield, Coins, Calendar, FileText, Hash, User, TrendingUp, Copy, ExternalLink, GitFork, Download, Gavel, Trophy, Trash2, AlertTriangle } from 'lucide-react'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Music, ImageIcon, Video, Gamepad2, Clock, Shield, Coins, Calendar, FileText, Hash, User, TrendingUp, Copy, ExternalLink, GitFork, Download, Gavel, Trophy, Trash2 } from 'lucide-react'
 
 import { useState, useEffect } from 'react'
 import { useAuth, useAuthState } from "@campnetwork/origin/react"
@@ -140,7 +139,6 @@ export default function AssetDetailPage() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null)
   const [isClaimingRefund, setIsClaimingRefund] = useState(false)
   const [userHasOutbidBid, setUserHasOutbidBid] = useState(false)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -546,50 +544,50 @@ export default function AssetDetailPage() {
     }
   }
 
-  // const handleRequestDeletion = async () => {
-  //   if (!asset || !auth.origin) return
+  const handleRequestDeletion = async () => {
+    if (!asset || !auth.origin) return
 
-  //   const confirmed = confirm(
-  //     "Are you sure you want to delete this asset on-chain? This action cannot be undone and you should download the content first."
-  //   )
+    const confirmed = confirm(
+      "Are you sure you want to delete this asset on-chain? This action cannot be undone and you should download the content first."
+    )
 
-  //   if (!confirmed) return
+    if (!confirmed) return
 
-  //   setIsRequestingDeletion(true)
-  //   try {
-  //     // 1. Request deletion on-chain (finalizeDelete burns the token)
-  //     const tokenIdBigInt = BigInt(asset.tokenId!)
-  //     // @ts-ignore
-  //     await auth.origin.finalizeDelete(tokenIdBigInt)
+    setIsRequestingDeletion(true)
+    try {
+      // 1. Request deletion on-chain (finalizeDelete burns the token)
+      const tokenIdBigInt = BigInt(asset.tokenId!)
+      // @ts-ignore
+      await auth.origin.finalizeDelete(tokenIdBigInt)
 
-  //     // 2. Mark deletion as requested in backend
-  //     const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/request-deletion`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         "Authorization": `Bearer ${token}`
-  //       }
-  //     })
+      // 2. Mark deletion as requested in backend
+      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/request-deletion`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      })
 
-  //     if (res.ok) {
-  //       toast.success("Deletion requested successfully! The asset will be removed on-chain")
-  //       // Refresh asset data
-  //       const assetRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
-  //       if (assetRes.ok) {
-  //         const assetData = await assetRes.json()
-  //         setAsset(assetData)
-  //       }
-  //     } else {
-  //       const error = await res.json()
-  //       toast.error(`Failed to request deletion: ${error.error}`)
-  //     }
-  //   } catch (error) {
-  //     console.error("Deletion request failed:", error)
-  //     toast.error("Failed to request deletion. Please try again")
-  //   } finally {
-  //     setIsRequestingDeletion(false)
-  //   }
-  // }
+      if (res.ok) {
+        toast.success("Deletion requested successfully! The asset will be removed on-chain")
+        // Refresh asset data
+        const assetRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
+        if (assetRes.ok) {
+          const assetData = await assetRes.json()
+          setAsset(assetData)
+        }
+      } else {
+        const error = await res.json()
+        toast.error(`Failed to request deletion: ${error.error}`)
+      }
+    } catch (error) {
+      console.error("Deletion request failed:", error)
+      toast.error("Failed to request deletion. Please try again")
+    } finally {
+      setIsRequestingDeletion(false)
+    }
+  }
 
   const handleClaimRefund = async () => {
     if (!asset) return
@@ -622,39 +620,6 @@ export default function AssetDetailPage() {
       toast.error("Failed to claim refund. Please try again")
     } finally {
       setIsClaimingRefund(false)
-    }
-  }
-
-  const handleRequestDeletion = async () => {
-    if (!asset || !token) return
-
-    setIsRequestingDeletion(true)
-    try {
-      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/request-deletion`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
-      })
-
-      if (res.ok) {
-        toast.success("Deletion request submitted successfully!")
-        setShowDeleteDialog(false)
-        // Refresh asset
-        const assetRes = await fetch(`https://api-fusion.solume.cloud/assets/${id}`)
-        if (assetRes.ok) {
-          const assetData = await assetRes.json()
-          setAsset(assetData)
-        }
-      } else {
-        const error = await res.json()
-        toast.error(`Failed to request deletion: ${error.error}`)
-      }
-    } catch (error) {
-      console.error("Deletion request failed:", error)
-      toast.error("Failed to request deletion. Please try again")
-    } finally {
-      setIsRequestingDeletion(false)
     }
   }
 
@@ -861,15 +826,12 @@ export default function AssetDetailPage() {
                   )}
                   <h1 className="mb-2 text-3xl font-bold text-balance">{asset.name}</h1>
                   <div className="flex items-center gap-2">
-                    <Link
-                      href={`/profile/${asset.creator?.walletAddress}`}
-                      className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                    >
-                      <p className="font-mono text-sm text-muted-foreground">
-                        by {asset.creator?.name || asset.creator?.walletAddress.slice(0, 10)}
-                      </p>
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </Link>
+                    <p className="font-mono text-sm text-muted-foreground">
+                      by {asset.creator?.name || asset.creator?.walletAddress.slice(0, 10)}
+                    </p>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
 
@@ -990,72 +952,15 @@ export default function AssetDetailPage() {
                         !asset.deletionRequested &&
                         asset.biddingWinnerId === currentUserId && (
                           <div className="pt-4 mt-4 border-t border-white/10">
-                            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="destructive"
-                                  className="w-full gap-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                  Delete On-Chain (Permanent)
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="sm:max-w-[500px]">
-                                <DialogHeader>
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <div className="h-12 w-12 rounded-full bg-red-500/20 flex items-center justify-center">
-                                      <AlertTriangle className="h-6 w-6 text-red-400" />
-                                    </div>
-                                    <DialogTitle className="text-xl">Confirm Permanent Deletion</DialogTitle>
-                                  </div>
-                                  <DialogDescription className="text-base pt-2">
-                                    This action will permanently delete <span className="font-semibold text-white">{asset.name}</span> from the blockchain. This operation cannot be undone.
-                                  </DialogDescription>
-                                </DialogHeader>
-
-                                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 my-4">
-                                  <div className="flex gap-3">
-                                    <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-                                    <div className="space-y-2 text-sm">
-                                      <p className="font-semibold text-red-400">Warning: This will:</p>
-                                      <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                                        <li>Remove the asset from the blockchain</li>
-                                        <li>Delete all associated metadata</li>
-                                        <li>Make the asset permanently inaccessible</li>
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <DialogFooter className="gap-2 sm:gap-0">
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => setShowDeleteDialog(false)}
-                                    className="border-white/10 hover:bg-white/5"
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    onClick={handleRequestDeletion}
-                                    disabled={isRequestingDeletion}
-                                    className="bg-red-500 hover:bg-red-600 text-white gap-2"
-                                  >
-                                    {isRequestingDeletion ? (
-                                      <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Deleting...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Trash2 className="h-4 w-4" />
-                                        Yes, Delete Permanently
-                                      </>
-                                    )}
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
+                            <Button
+                              onClick={handleRequestDeletion}
+                              disabled={isRequestingDeletion}
+                              variant="destructive"
+                              className="w-full gap-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20"
+                            >
+                              {isRequestingDeletion ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                              Delete On-Chain (Permanent)
+                            </Button>
                           </div>
                         )}
                     </div>
