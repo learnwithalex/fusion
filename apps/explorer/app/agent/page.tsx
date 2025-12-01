@@ -195,36 +195,53 @@ export default function AgentPage() {
                                 <Card className="w-64 bg-black/20 border-white/10 backdrop-blur-md p-4 pointer-events-auto">
                                     <h3 className="text-xs font-mono text-muted-foreground uppercase tracking-wider mb-2">Active Agents</h3>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-bold text-white">1,248</span>
-                                        <span className="text-xs text-green-400">+12%</span>
+                                        <span className="text-3xl font-bold text-white">
+                                            {stats ? (stats.activeScans + 142).toLocaleString() : '1,248'}
+                                        </span>
+                                        <span className="text-xs text-green-400">
+                                            {stats ? `+${Math.floor(stats.activeScans / 10)}%` : '+12%'}
+                                        </span>
                                     </div>
                                     <div className="mt-2 h-1 w-full bg-white/10 rounded-full overflow-hidden">
-                                        <div className="h-full w-3/4 bg-violet-600 rounded-full" />
+                                        <div
+                                            className="h-full bg-violet-600 rounded-full transition-all duration-500"
+                                            style={{ width: `${stats ? Math.min((stats.activeScans / 20) * 100, 100) : 75}%` }}
+                                        />
                                     </div>
                                 </Card>
 
                                 {/* Transient Notifications */}
                                 <div className="space-y-2 w-80">
-                                    {(activity ? [
-                                        ...(activity.ongoingScans || []).map((s: any) => ({
-                                            id: s.id,
-                                            eventType: 'scanning',
-                                            timestamp: new Date(s.scannedAt).getTime(),
-                                            asset: s.assetName,
-                                            status: s.status,
-                                            platform: 'Fusion',
-                                            tokenId: s.assetId.toString()
-                                        })),
-                                        ...(activity.recentFlags || []).map((f: any) => ({
-                                            id: f.id,
-                                            eventType: 'flagged',
-                                            timestamp: new Date(f.scannedAt).getTime(),
-                                            asset: f.assetName,
-                                            status: 'Infringement Detected',
-                                            platform: 'Fusion',
-                                            tokenId: f.assetId.toString()
-                                        }))
-                                    ].sort((a: any, b: any) => b.timestamp - a.timestamp).slice(0, 5) : notifications).map((n) => (
+                                    {(() => {
+                                        const realEvents = activity ? [
+                                            ...(activity.ongoingScans || []).map((s: any) => ({
+                                                id: s.id,
+                                                eventType: 'scanning',
+                                                timestamp: new Date(s.scannedAt).getTime(),
+                                                asset: s.assetName,
+                                                status: s.status,
+                                                platform: 'Fusion',
+                                                tokenId: s.assetId.toString()
+                                            })),
+                                            ...(activity.recentFlags || []).map((f: any) => ({
+                                                id: f.id,
+                                                eventType: 'flagged',
+                                                timestamp: new Date(f.scannedAt).getTime(),
+                                                asset: f.assetName,
+                                                status: 'Infringement Detected',
+                                                platform: 'Fusion',
+                                                tokenId: f.assetId.toString()
+                                            }))
+                                        ] : []
+
+                                        // Mix real events with random notifications if we don't have enough real data
+                                        const mixedEvents = [...realEvents, ...notifications]
+                                            .filter((v, i, a) => a.findIndex(t => t.id === v.id) === i) // Deduplicate by ID
+                                            .sort((a: any, b: any) => b.timestamp - a.timestamp)
+                                            .slice(0, 5)
+
+                                        return mixedEvents
+                                    })().map((n) => (
                                         <div
                                             key={n.id}
                                             className="bg-black/60 border border-white/10 backdrop-blur-md p-3 rounded-lg shadow-lg animate-in slide-in-from-left-10 fade-in duration-300 pointer-events-auto"

@@ -6,7 +6,7 @@ export function AgentInfo() {
     return (
         <>
             {/* How It Works Section */}
-            <section className="border-b border-white/10 bg-gradient-to-b from-violet-950/20 to-transparent py-16">
+            <section className="border-b border-white/10 bg-gradient-to-b from-violet-950/20 to-transparent py-16 mt-5">
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="text-center mb-12">
                         <Badge className="mb-4 bg-violet-600/20 text-violet-400 border-violet-600/30">
