@@ -250,10 +250,11 @@ export function Navbar() {
             </Button>
           </div>
         )}
+        {showCampModal && <CampModal />}
       </div>
 
       {/* Show CampModal when connection fails */}
-      {showCampModal && <CampModal />}
+
     </nav>
   )
 }
