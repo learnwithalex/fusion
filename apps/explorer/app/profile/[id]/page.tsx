@@ -7,12 +7,13 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { User, LinkIcon, Twitter, Copy, ExternalLink, Music, Image, Video, Gamepad2, Sparkles, Youtube, Instagram, Loader2, Upload } from 'lucide-react'
+import { User, LinkIcon, Twitter, Copy, ExternalLink, Music, Image, Video, Gamepad2, Sparkles, Youtube, Instagram, Loader2, Upload, UserPlus, UserCheck } from 'lucide-react'
 import { FaTiktok, FaSpotify } from 'react-icons/fa'
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { useParams } from "next/navigation"
+import { toast } from "sonner"
 
 interface UserProfile {
     id: number
@@ -62,7 +63,7 @@ const typeIcons = {
 }
 
 export default function PublicProfilePage() {
-    const { walletAddress: currentUserAddress } = useBackendAuth()
+    const { token, walletAddress: currentUserAddress } = useBackendAuth()
     const params = useParams()
     const profileId = params.id as string // This is the wallet address from the URL
 
@@ -71,6 +72,8 @@ export default function PublicProfilePage() {
     const [uploads, setUploads] = useState<Asset[]>([])
     const [licensedItems, setLicensedItems] = useState<Asset[]>([])
     const [activity, setActivity] = useState<Activity[]>([])
+    const [isFollowing, setIsFollowing] = useState(false)
+    const [followLoading, setFollowLoading] = useState(false)
 
     const isOwnProfile = currentUserAddress?.toLowerCase() === profileId?.toLowerCase()
 
@@ -89,7 +92,7 @@ export default function PublicProfilePage() {
         if (profileId) {
             loadData()
         }
-    }, [profileId])
+    }, [profileId, token])
 
     const fetchProfile = async () => {
         try {
@@ -101,6 +104,9 @@ export default function PublicProfilePage() {
                 fetchUploads(data.id)
                 fetchLicensedItems(data.id)
                 fetchActivity(data.id)
+                if (token && !isOwnProfile) {
+                    checkFollowStatus(data.id)
+                }
             }
         } catch (error) {
             console.error("Failed to fetch profile:", error)
@@ -138,9 +144,56 @@ export default function PublicProfilePage() {
         }
     }
 
+    const checkFollowStatus = async (userId: number) => {
+        try {
+            const res = await fetch(`https://api-fusion.solume.cloud/users/${userId}/is-following`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setIsFollowing(data.isFollowing)
+            }
+        } catch (error) {
+            console.error("Failed to check follow status:", error)
+        }
+    }
+
+    const handleFollowToggle = async () => {
+        if (!profile?.id || !token) {
+            toast.error("Please connect your wallet to follow users")
+            return
+        }
+
+        setFollowLoading(true)
+        try {
+            const method = isFollowing ? 'DELETE' : 'POST'
+
+            const res = await fetch(`https://api-fusion.solume.cloud/users/${profile.id}/follow`, {
+                method: method,
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+
+            if (res.ok) {
+                setIsFollowing(!isFollowing)
+                toast.success(isFollowing ? "Unfollowed user" : "Following user")
+            } else {
+                toast.error("Failed to update follow status")
+            }
+        } catch (error) {
+            console.error("Follow action failed:", error)
+            toast.error("Something went wrong")
+        } finally {
+            setFollowLoading(false)
+        }
+    }
+
     const copyAddress = () => {
         if (profile?.walletAddress) {
             navigator.clipboard.writeText(profile.walletAddress)
+            toast.success("Address copied to clipboard")
         }
     }
 
@@ -286,8 +339,22 @@ export default function PublicProfilePage() {
                                             </Button>
                                         </Link>
                                     ) : (
-                                        <Button className="h-12 rounded-full bg-violet-600 text-white hover:bg-violet-700 px-8 font-semibold shadow-[0_0_20px_-5px_rgba(124,58,237,0.3)] transition-all hover:scale-105">
-                                            Follow
+                                        <Button
+                                            onClick={handleFollowToggle}
+                                            disabled={followLoading}
+                                            className={`h-12 rounded-full px-8 font-semibold shadow-[0_0_20px_-5px_rgba(124,58,237,0.3)] transition-all hover:scale-105 ${isFollowing
+                                                    ? "bg-white/10 text-white hover:bg-white/20 border border-white/10"
+                                                    : "bg-violet-600 text-white hover:bg-violet-700"
+                                                }`}
+                                        >
+                                            {followLoading ? (
+                                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                            ) : isFollowing ? (
+                                                <UserCheck className="h-4 w-4 mr-2" />
+                                            ) : (
+                                                <UserPlus className="h-4 w-4 mr-2" />
+                                            )}
+                                            {followLoading ? "Loading..." : isFollowing ? "Following" : "Follow"}
                                         </Button>
                                     )}
                                     <Button variant="outline" className="h-12 w-12 rounded-full border-white/10 bg-white/5 p-0 backdrop-blur-md hover:bg-white/10 hover:border-white/20">

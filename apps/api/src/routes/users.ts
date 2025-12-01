@@ -267,36 +267,76 @@ router.patch("/:id", async (req, res) => {
 });
 
 // Follow User
-router.post("/:id/follow", async (req, res) => {
+// Follow User
+router.post("/:id/follow", authenticate, async (req, res) => {
     const { id } = req.params; // User to follow
-    const { followerId } = req.body; // Current user ID (from auth middleware in real app)
+    const followerId = req.user!.id;
+
+    if (parseInt(id) === followerId) {
+        return res.status(400).json({ error: "Cannot follow yourself" });
+    }
 
     try {
+        // Check if already following
+        const existingFollow = await db.select().from(follows).where(
+            and(
+                eq(follows.followerId, followerId),
+                eq(follows.followingId, parseInt(id))
+            )
+        );
+
+        if (existingFollow.length > 0) {
+            return res.json({ success: true, message: "Already following" });
+        }
+
         await db.insert(follows).values({
-            followerId: parseInt(followerId),
+            followerId: followerId,
             followingId: parseInt(id),
         });
         res.json({ success: true });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: "Failed to follow user" });
     }
 });
 
 // Unfollow User
-router.delete("/:id/follow", async (req, res) => {
+// Unfollow User
+router.delete("/:id/follow", authenticate, async (req, res) => {
     const { id } = req.params;
-    const { followerId } = req.body;
+    const followerId = req.user!.id;
 
     try {
         await db.delete(follows).where(
             and(
-                eq(follows.followerId, parseInt(followerId)),
+                eq(follows.followerId, followerId),
                 eq(follows.followingId, parseInt(id))
             )
         );
         res.json({ success: true });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: "Failed to unfollow user" });
+    }
+});
+
+// Check if following
+router.get("/:id/is-following", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const followerId = req.user!.id;
+
+    try {
+        const follow = await db.select().from(follows).where(
+            and(
+                eq(follows.followerId, followerId),
+                eq(follows.followingId, parseInt(id))
+            )
+        );
+
+        res.json({ isFollowing: follow.length > 0 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed to check follow status" });
     }
 });
 
