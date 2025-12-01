@@ -56,7 +56,7 @@ export function Hero() {
     }, [])
 
     return (
-        <div className="relative mb-24 flex min-h-[600px] flex-col items-center justify-center lg:flex-row lg:justify-between">
+        <div className="relative mb-12 md:mb-24 flex min-h-[400px] md:min-h-[600px] flex-col items-center justify-center lg:flex-row lg:justify-between px-4">
 
             {/* Background Effects */}
             <div className="absolute left-1/2 top-1/2 -z-10 h-[800px] w-[800px] -translate-x-1/2 -translate-y-1/2 opacity-30">
@@ -79,7 +79,7 @@ export function Hero() {
                     </div>
                 </Link>
 
-                <h1 className="mb-8 text-6xl font-black tracking-tighter text-white lg:text-8xl">
+                <h1 className="mb-6 md:mb-8 text-4xl md:text-6xl font-black tracking-tighter text-white lg:text-8xl">
                     Monetize your <br />
                     <div className="relative h-[1.2em] w-full overflow-hidden">
                         {categories.map((cat, i) => (
@@ -103,13 +103,13 @@ export function Hero() {
                     </div>
                 </h1>
 
-                <p className="mb-10 max-w-xl text-2xl text-slate-400 lg:mx-0">
+                <p className="mb-8 md:mb-10 max-w-xl text-lg md:text-2xl text-slate-400 lg:mx-0">
                     Literally giving creators the ability to license content globally at scale.
                 </p>
 
                 <div className="flex flex-col items-center gap-4 sm:flex-row lg:justify-start">
                     <Link href="/upload">
-                        <Button size="lg" className="group h-16 rounded-lg bg-gradient-to-r from-violet-600 to-purple-700 px-10 text-xl font-bold text-white shadow-lg shadow-violet-600/20 transition-all hover:scale-105 hover:shadow-violet-600/40">
+                        <Button size="lg" className="group h-14 md:h-16 rounded-lg bg-gradient-to-r from-violet-600 to-purple-700 px-8 md:px-10 text-lg md:text-xl font-bold text-white shadow-lg shadow-violet-600/20 transition-all hover:scale-105 hover:shadow-violet-600/40">
                             <span className="flex items-center gap-2">
                                 Start Earning
                                 <Rocket className="h-5 w-5 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
@@ -117,7 +117,7 @@ export function Hero() {
                         </Button>
                     </Link>
                     <Link href="/explore">
-                        <Button size="lg" variant="outline" className="group h-16 rounded-lg border-white/10 bg-white/5 px-10 text-xl backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/20 hover:scale-105">
+                        <Button size="lg" variant="outline" className="group h-14 md:h-16 rounded-lg border-white/10 bg-white/5 px-8 md:px-10 text-lg md:text-xl backdrop-blur-md transition-all hover:bg-white/10 hover:border-white/20 hover:scale-105">
                             <span className="flex items-center gap-2">
                                 Explore Assets
                                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -128,7 +128,7 @@ export function Hero() {
             </div>
 
             {/* Right Visual - Floating Card */}
-            <div className="relative mt-16 lg:mt-0 lg:mr-12 perspective-1000">
+            <div className="hidden lg:block relative mt-16 lg:mt-0 lg:mr-12 perspective-1000">
                 <div className="relative h-[500px] w-[380px] rotate-y-12 rotate-x-6 transform rounded-3xl border border-white/10 bg-slate-900/80 p-6 backdrop-blur-xl shadow-2xl transition-transform duration-500 hover:rotate-0 hover:scale-105">
                     {/* Card Content */}
                     <div className="mb-6 h-64 overflow-hidden rounded-2xl bg-black">

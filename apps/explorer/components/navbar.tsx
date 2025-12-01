@@ -114,7 +114,7 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-white/10 bg-white/5 backdrop-blur-2xl shadow-lg shadow-black/5">
-      <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between gap-6 px-6">
+      <div className="mx-auto flex h-16 max-w-[1800px] items-center justify-between gap-2 md:gap-6 px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <img loading='lazy' src="/fusion-logo.png" alt="Fusion Logo" className='h-8' />
         </Link>
@@ -221,8 +221,8 @@ export function Navbar() {
         </div>
 
         {!showCampModal && (
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+          <div className="flex items-center gap-2 md:gap-3">
+            <Button variant="ghost" asChild className="hidden md:inline-flex text-muted-foreground hover:text-foreground">
               <Link href="/dashboard">Docs</Link>
             </Button>
 
@@ -245,8 +245,8 @@ export function Navbar() {
                 <Wallet className="h-4 w-4" />
               )}
               {loading ? "Connecting..." : isAuthenticating ? "Verifying..." : isAuthenticated ? (
-                isHoveringWallet ? "Disconnect" : (walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connected")
-              ) : "Connect Wallet"}
+                isHoveringWallet ? <span className="hidden md:inline">Disconnect</span> : (walletAddress ? <span className="hidden md:inline">{`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}</span> : <span className="hidden md:inline">Connected</span>)
+              ) : <span className="hidden md:inline">Connect Wallet</span>}
             </Button>
           </div>
         )}

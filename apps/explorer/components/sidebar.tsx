@@ -19,8 +19,38 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="fixed left-2 top-1/2 -translate-y-1/2 z-40">
-      <nav className="flex flex-col items-center gap-3 p-2 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/10">
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:block fixed left-2 top-1/2 -translate-y-1/2 z-40">
+        <nav className="flex flex-col items-center gap-3 p-2 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl shadow-black/10">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            const isActive = pathname === item.href
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group relative flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200",
+                  isActive
+                    ? "bg-gradient-to-br from-violet-600/10 to-purple-700/10 text-violet-400 shadow-[0_0_20px_-5px_rgba(124,58,237,0.3)] scale-110"
+                    : "text-muted-foreground hover:bg-white/10 hover:text-white hover:scale-105"
+                )}
+              >
+                <Icon className={item.label === "Upload" ? "h-4 w-4" : "h-5 w-5"} />
+
+                <span className="absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-slate-900/90 backdrop-blur-xl border border-white/10 px-3 py-1.5 text-sm font-medium text-white shadow-xl group-hover:block z-50">
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+        </nav>
+      </aside>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-4 left-4 right-4 z-50 flex justify-between items-center p-2 rounded-2xl border border-white/10 bg-black/80 backdrop-blur-2xl shadow-2xl">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
@@ -30,21 +60,18 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "group relative flex h-14 w-14 items-center justify-center rounded-2xl transition-all duration-200",
+                "flex flex-col items-center justify-center w-full py-1 transition-all duration-200",
                 isActive
-                  ? "bg-gradient-to-br from-violet-600/10 to-purple-700/10 text-violet-400 shadow-[0_0_20px_-5px_rgba(124,58,237,0.3)] scale-110"
-                  : "text-muted-foreground hover:bg-white/10 hover:text-white hover:scale-105"
+                  ? "text-violet-400 scale-110"
+                  : "text-muted-foreground hover:text-white"
               )}
             >
-              <Icon className={item.label === "Upload" ? "h-4 w-4" : "h-5 w-5"} />
-
-              <span className="absolute left-full ml-4 hidden whitespace-nowrap rounded-lg bg-slate-900/90 backdrop-blur-xl border border-white/10 px-3 py-1.5 text-sm font-medium text-white shadow-xl group-hover:block z-50">
-                {item.label}
-              </span>
+              <Icon className={cn("mb-1", item.label === "Upload" ? "h-5 w-5" : "h-6 w-6")} />
+              {/* <span className="text-[10px] font-medium">{item.label}</span> */}
             </Link>
           )
         })}
       </nav>
-    </aside>
+    </>
   )
 }

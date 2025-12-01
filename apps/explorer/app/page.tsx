@@ -151,7 +151,7 @@ export default function HomePage() {
       <Navbar />
       <Sidebar />
 
-      <main className="ml-20 px-8 py-8">
+      <main className="ml-0 md:ml-20 px-4 md:px-8 py-8 pb-24 md:pb-8">
         <div className="mx-auto max-w-[1600px]">
           {/* Hero Section */}
           <Hero />
@@ -159,21 +159,23 @@ export default function HomePage() {
           {/* Filter Tabs */}
           <Tabs defaultValue="trending" className="mb-8">
             <div className="mb-8 flex flex-col gap-6">
-              <div className="flex items-center justify-between">
-                <TabsList className="h-12 bg-white/5 border border-white/10 backdrop-blur-md p-1 rounded-full">
-                  <TabsTrigger value="trending" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300 gap-2">
-                    <TrendingUp className="h-4 w-4" />
-                    Trending
-                  </TabsTrigger>
-                  <TabsTrigger value="recent" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300 gap-2">
-                    <Clock className="h-4 w-4" />
-                    Recent
-                  </TabsTrigger>
-                  <TabsTrigger value="music" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Music</TabsTrigger>
-                  <TabsTrigger value="art" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Art</TabsTrigger>
-                  <TabsTrigger value="video" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Video</TabsTrigger>
-                  <TabsTrigger value="models" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">3D Models</TabsTrigger>
-                </TabsList>
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="w-full overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+                  <TabsList className="h-12 bg-white/5 border border-white/10 backdrop-blur-md p-1 rounded-full w-max">
+                    <TabsTrigger value="trending" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300 gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Trending
+                    </TabsTrigger>
+                    <TabsTrigger value="recent" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300 gap-2">
+                      <Clock className="h-4 w-4" />
+                      Recent
+                    </TabsTrigger>
+                    <TabsTrigger value="music" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Music</TabsTrigger>
+                    <TabsTrigger value="art" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Art</TabsTrigger>
+                    <TabsTrigger value="video" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">Video</TabsTrigger>
+                    <TabsTrigger value="models" className="rounded-full px-6 data-[state=active]:bg-violet-600 data-[state=active]:text-white transition-all duration-300">3D Models</TabsTrigger>
+                  </TabsList>
+                </div>
 
                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-full p-1 backdrop-blur-md">
                   <Button

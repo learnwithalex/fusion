@@ -73,7 +73,58 @@ export function AgentInfo() {
                         <p className="text-muted-foreground">Our vision for comprehensive IP protection</p>
                     </div>
 
-                    <div className="relative">
+                    {/* Mobile Timeline */}
+                    <div className="md:hidden relative pl-8">
+                        <div className="absolute left-4 top-0 bottom-0 w-px bg-gradient-to-b from-violet-600 via-purple-600 to-transparent" />
+
+                        <div className="space-y-8">
+                            {/* Phase 1 */}
+                            <div className="relative">
+                                <div className="absolute -left-[26px] h-8 w-8 rounded-full bg-green-600 flex items-center justify-center">
+                                    <CheckCircle className="h-5 w-5 text-white" />
+                                </div>
+                                <Badge className="mb-2 bg-green-600/20 text-green-400 border-green-600/30">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Active
+                                </Badge>
+                                <h3 className="text-lg font-semibold mb-2">Phase 1: Internal Fusion Checks</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Fingerprint scanning and duplicate detection within the Fusion platform
+                                </p>
+                            </div>
+
+                            {/* Phase 2 */}
+                            <div className="relative">
+                                <div className="absolute -left-[26px] h-8 w-8 rounded-full bg-violet-600 flex items-center justify-center">
+                                    <Network className="h-5 w-5 text-white" />
+                                </div>
+                                <Badge className="mb-2 bg-violet-600/20 text-violet-400 border-violet-600/30">
+                                    Coming Soon
+                                </Badge>
+                                <h3 className="text-lg font-semibold mb-2">Phase 2: Camp Origin Network</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Expand scanning to the entire Camp Origin ecosystem for comprehensive protection
+                                </p>
+                            </div>
+
+                            {/* Phase 3 */}
+                            <div className="relative">
+                                <div className="absolute -left-[26px] h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">
+                                    <Zap className="h-5 w-5 text-white" />
+                                </div>
+                                <Badge className="mb-2 bg-purple-600/20 text-purple-400 border-purple-600/30">
+                                    Future
+                                </Badge>
+                                <h3 className="text-lg font-semibold mb-2">Phase 3: Cross-Platform Scanning</h3>
+                                <p className="text-sm text-muted-foreground">
+                                    Monitor content across Spotify, YouTube, TikTok, and other major platforms
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Desktop Timeline */}
+                    <div className="hidden md:block relative">
                         <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-violet-600 via-purple-600 to-transparent" />
 
                         <div className="space-y-12">
