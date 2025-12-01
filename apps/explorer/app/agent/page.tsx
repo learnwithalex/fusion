@@ -11,7 +11,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Globe, Play, Pause, Filter } from 'lucide-react'
 import { useEffect, useState, useRef } from "react"
-import { AgentInfo, AgentStats } from "@/components/agent-info"
+import { useAgentData } from "@/hooks/useAgentData"
+import Link from "next/link"
+import { Info } from "lucide-react"
 
 // Extended event type
 interface ScanningEvent {
@@ -59,38 +61,8 @@ export default function AgentPage() {
     })
     const globeRef = useRef<any>(null)
 
-    // Real API data
-    const [stats, setStats] = useState<any>(null)
-    const [activity, setActivity] = useState<any>(null)
-
-    // Fetch real data from API
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [statsRes, activityRes] = await Promise.all([
-                    fetch('https://api-fusion.solume.cloud/agent/stats'),
-                    fetch('https://api-fusion.solume.cloud/agent/activity')
-                ])
-
-                if (statsRes.ok) {
-                    const statsData = await statsRes.json()
-                    setStats(statsData)
-                }
-
-                if (activityRes.ok) {
-                    const activityData = await activityRes.json()
-                    setActivity(activityData)
-                }
-            } catch (error) {
-                console.error('Error fetching agent data:', error)
-            }
-        }
-
-        fetchData()
-        // Refresh every 10 seconds
-        const interval = setInterval(fetchData, 10000)
-        return () => clearInterval(interval)
-    }, [])
+    // Real API data from hook
+    const { stats, activity } = useAgentData()
 
     // Initial data population
     useEffect(() => {
@@ -183,8 +155,14 @@ export default function AgentPage() {
         <div className="min-h-screen bg-black overflow-hidden flex flex-col">
             <Navbar />
 
-            <AgentInfo />
-            <AgentStats stats={stats} activity={activity} />
+            <div className="absolute top-20 right-6 z-50">
+                <Link href="/agent/info">
+                    <Button variant="outline" className="bg-black/40 border-white/10 backdrop-blur-md hover:bg-white/10 text-white gap-2">
+                        <Info className="h-4 w-4" />
+                        How it Works
+                    </Button>
+                </Link>
+            </div>
 
             <main className="flex-1 relative">
                 {/* Background Gradients */}
@@ -227,21 +205,41 @@ export default function AgentPage() {
 
                                 {/* Transient Notifications */}
                                 <div className="space-y-2 w-80">
-                                    {notifications.map((n) => (
+                                    {(activity ? [
+                                        ...(activity.ongoingScans || []).map((s: any) => ({
+                                            id: s.id,
+                                            eventType: 'scanning',
+                                            timestamp: new Date(s.scannedAt).getTime(),
+                                            asset: s.assetName,
+                                            status: s.status,
+                                            platform: 'Fusion',
+                                            tokenId: s.assetId.toString()
+                                        })),
+                                        ...(activity.recentFlags || []).map((f: any) => ({
+                                            id: f.id,
+                                            eventType: 'flagged',
+                                            timestamp: new Date(f.scannedAt).getTime(),
+                                            asset: f.assetName,
+                                            status: 'Infringement Detected',
+                                            platform: 'Fusion',
+                                            tokenId: f.assetId.toString()
+                                        }))
+                                    ].sort((a: any, b: any) => b.timestamp - a.timestamp).slice(0, 5) : notifications).map((n) => (
                                         <div
                                             key={n.id}
                                             className="bg-black/60 border border-white/10 backdrop-blur-md p-3 rounded-lg shadow-lg animate-in slide-in-from-left-10 fade-in duration-300 pointer-events-auto"
                                         >
                                             <div className="flex items-center gap-2 mb-1">
                                                 <div className={`h-2 w-2 rounded-full ${n.eventType === 'flagged' ? 'bg-red-500' :
-                                                    n.eventType === 'registered' ? 'bg-green-500' :
-                                                        'bg-blue-500'
+                                                    n.eventType === 'scanning' ? 'bg-blue-500' :
+                                                        'bg-green-500'
                                                     }`} />
                                                 <span className="text-xs font-bold text-white uppercase">{n.eventType}</span>
                                                 <span className="text-[10px] text-muted-foreground ml-auto">{new Date(n.timestamp).toLocaleTimeString()}</span>
                                             </div>
                                             <p className="text-sm text-white font-medium truncate">
-                                                {n.eventType === 'flagged' ? 'Content Copyright Detected' : 'New Asset Registered'}
+                                                {n.eventType === 'flagged' ? 'Content Copyright Detected' :
+                                                    n.eventType === 'scanning' ? 'Scanning Asset' : 'New Asset Registered'}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                                                 <span className="font-mono text-violet-400">#{n.tokenId}</span>
