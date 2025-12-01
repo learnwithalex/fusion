@@ -8,9 +8,9 @@ import { Toaster } from 'sonner'
 const _bricolage = Bricolage_Grotesque({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: 'Fusion Explorer',
+  description: 'The decentralized IP explorer for the Camp Network.',
+  generator: 'Fusion',
   icons: {
     icon: [
       {
