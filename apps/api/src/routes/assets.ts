@@ -389,16 +389,22 @@ router.get("/:id", async (req, res) => {
 
         // 5. Fetch Activity (Transactions)
         const activity = await db.select({
+            id: transactions.id,
+            transactionType: transactions.transactionType,
             type: transactions.transactionType,
+            assetId: assets.id,
+            assetName: assets.name,
             amount: transactions.amount,
-            date: transactions.createdAt,
-            user: {
-                walletAddress: users.walletAddress,
-                name: users.name
-            }
+            from: sql<string>`COALESCE(${assets.userId}::text, 'system')`,
+            to: users.walletAddress,
+            transactionHash: transactions.tnxhash,
+            blockNumber: sql<number>`0`, // Add when you have this field
+            status: transactions.status,
+            createdAt: transactions.createdAt
         })
             .from(transactions)
             .leftJoin(users, eq(transactions.userId, users.id))
+            .leftJoin(assets, eq(transactions.assetId, assets.id))
             .where(eq(transactions.assetId, asset.id))
             .orderBy(desc(transactions.createdAt))
             .limit(10);
