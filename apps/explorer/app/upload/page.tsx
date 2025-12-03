@@ -165,10 +165,13 @@ export default function UploadPage() {
 
 
 
+  const [mintStage, setMintStage] = useState<string>("")
+
   const handleMint = async () => {
     if (!file || !name || !type || !price || !auth.origin) return
 
     setIsMinting(true)
+    setMintStage("Uploading to IPFS & Minting NFT...")
     try {
       // 1. Mint to Blockchain via Origin
       const licenseTerms = createLicenseTerms(
@@ -198,6 +201,7 @@ export default function UploadPage() {
       const encryptedFileUrl = (assetData as any)?.data?.[0]?.file?.[0] || "encrypted-url-placeholder";
 
       // 2. Pay Protocol Fee (0.1 CAMP)
+      setMintStage("Paying Protocol Fee (0.1 CAMP)...")
       try {
         if (!window.ethereum) throw new Error("No wallet found");
         if (!walletAddress) throw new Error("User not authenticated");
@@ -264,9 +268,12 @@ export default function UploadPage() {
         console.error("Protocol fee payment failed:", error);
         toast.error("Protocol fee payment failed. Please try again");
         setIsMinting(false);
+        setMintStage("")
+        return; // Stop execution if fee payment fails
       }
 
       // 3. Sign Verification Payload
+      setMintStage("Signing Verification Message...")
       let signature = "";
       let verificationPayload = {
         walletAddress: walletAddress,
@@ -326,10 +333,12 @@ export default function UploadPage() {
         console.error("Signing failed:", error);
         toast.error("Failed to sign verification message. Upload cancelled");
         setIsMinting(false);
+        setMintStage("")
         return;
       }
 
       // 4. Sync with Backend
+      setMintStage("Finalizing & Syncing...")
       const endpoint = "https://api-fusion.solume.cloud/assets"
 
       const res = await fetch("https://api-fusion.solume.cloud/assets", {
@@ -368,11 +377,13 @@ export default function UploadPage() {
 
       // 5. If bidding enabled, approve marketplace AND create auction
       if (biddingEnabled && tokenId && newAsset.id) {
+        setMintStage("Creating Auction on Marketplace...")
         try {
           const { FUSION_MARKETPLACE_ADDRESS, FUSION_MARKETPLACE_ABI } = await import('@/lib/fusionMarketplace')
           const { encodeFunctionData } = await import('viem')
 
           // a. Approve Marketplace
+          setMintStage("Approving Marketplace Contract...")
           await auth.origin.approve(
             FUSION_MARKETPLACE_ADDRESS,
             BigInt(tokenId)
@@ -380,6 +391,7 @@ export default function UploadPage() {
           console.log("NFT approved for marketplace")
 
           // b. Create Auction on Contract
+          setMintStage("Initializing Auction...")
           // createAuction(assetId, tokenId, startPrice, duration)
           const startPriceWei = BigInt(Math.floor(parseFloat(biddingStartPrice) * 1e18))
           const durationSeconds = BigInt(parseInt(biddingDuration) * 3600)
@@ -435,6 +447,7 @@ export default function UploadPage() {
 
         } catch (error) {
           console.error("Auction creation failed:", error)
+          toast.error("Failed to create auction. Rolling back asset creation...")
 
           // Rollback: Delete the asset from backend
           try {
@@ -451,6 +464,7 @@ export default function UploadPage() {
 
           toast.error("Auction creation failed on blockchain. The asset upload has been cancelled. Please try again")
           setIsMinting(false)
+          setMintStage("")
           return // Stop execution, don't redirect
         }
       }
@@ -462,8 +476,10 @@ export default function UploadPage() {
       router.push("/profile")
     } catch (error) {
       console.error("Minting failed:", error)
+      toast.error("Minting failed. Please check console for details.")
     } finally {
       setIsMinting(false)
+      setMintStage("")
     }
   }
 
@@ -738,9 +754,6 @@ export default function UploadPage() {
                       <SelectContent className="bg-slate-900 border-white/10 text-white">
                         <SelectItem value="7">7 days</SelectItem>
                         <SelectItem value="30">30 days</SelectItem>
-                        <SelectItem value="90">90 days</SelectItem>
-                        <SelectItem value="365">1 year</SelectItem>
-                        <SelectItem value="lifetime">Lifetime</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -947,7 +960,7 @@ export default function UploadPage() {
                     disabled={isMinting || !file || !name || !price || (!!remixParent && hasAccess === false)}
                   >
                     {isMinting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-                    {isMinting ? "Minting..." : "Mint Asset"}
+                    {isMinting ? mintStage : "Mint Asset"}
                   </Button>
                 </div>
 
