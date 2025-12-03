@@ -239,7 +239,7 @@ export default function UploadPage() {
         const transactionParameters = {
           to: '0xa257a6ecbb64f869c97a8239007f86d2cc676fee', // TODO: Replace with real fee recipient
           from: targetAccount,
-          value: '0x2386F26FC10000', // 0.01 CAMP in wei (10000000000000000)
+          value: '0x16345785D8A0000', // 0.1 CAMP in wei (100000000000000000)
         };
 
         const txHash = await provider.request({

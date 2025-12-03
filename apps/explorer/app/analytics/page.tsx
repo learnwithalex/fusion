@@ -235,10 +235,16 @@ export default function AnalyticsPage() {
                             <h1 className="text-2xl font-bold tracking-tight text-white mb-1">Protocol Overview</h1>
                             <p className="text-sm text-muted-foreground">Statistics and governance for the Fusion protocol</p>
                         </div>
-                        <Button className="gap-2 rounded-xl bg-white/5 text-white hover:bg-white/10 border border-white/10">
-                            <ArrowUpRight className="h-4 w-4" />
-                            View Contract
-                        </Button>
+                        <a
+                            href="https://basecamp.cloud.blockscout.com/address/0x00329CEBD0B06690aA5a28982CD614185AEA6033"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <Button className="gap-2 rounded-xl bg-white/5 text-white hover:bg-white/10 border border-white/10">
+                                <ArrowUpRight className="h-4 w-4" />
+                                View Contract
+                            </Button>
+                        </a>
                     </div>
 
                     <Tabs defaultValue="stats" className="space-y-6">

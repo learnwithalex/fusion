@@ -18,6 +18,7 @@ import { PageLoader } from "@/components/page-loader"
 import { Loader2, Check } from "lucide-react"
 import { useBackendAuth } from "@/hooks/useBackendAuth"
 import { toast } from 'sonner'
+import { ActivityCard } from "@/components/activity-card"
 
 // Mock data fallback removed
 
@@ -40,13 +41,17 @@ interface Metadata {
 }
 
 interface Activity {
-  type: string
+  id: number
+  transactionType: string
+  assetId?: number
+  assetName?: string | null
   amount: string
-  date: string
-  user: {
-    walletAddress: string
-    name: string | null
-  }
+  from: string | null
+  to: string
+  transactionHash: string
+  blockNumber?: number
+  status: string
+  createdAt: string
 }
 
 interface Derivative {
@@ -785,25 +790,14 @@ export default function AssetDetailPage() {
                 <h2 className="mb-4 text-xl font-semibold">Activity</h2>
                 <div className="space-y-3">
                   {asset.activity && asset.activity.length > 0 ? (
-                    asset.activity.map((activity, index) => (
-                      <div key={index} className="flex items-center justify-between rounded-lg bg-white/5 p-3 border border-white/5">
-                        <div className="flex items-center gap-3">
-                          <TrendingUp className="h-4 w-4 text-violet-400" />
-                          <div>
-                            <p className="font-medium text-sm capitalize">{activity.type}</p>
-                            <p className="font-mono text-xs text-muted-foreground">
-                              {activity.user.name || activity.user.walletAddress.slice(0, 6)}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium text-sm">{activity.amount} CAMP</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(activity.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    ))
+                    <div className="space-y-4">
+                      {asset.activity.map((item) => (
+                        <ActivityCard
+                          key={item.id}
+                          activity={item}
+                        />
+                      ))}
+                    </div>
                   ) : (
                     <p className="text-muted-foreground text-sm">No activity recorded.</p>
                   )}
@@ -829,9 +823,13 @@ export default function AssetDetailPage() {
                     <p className="font-mono text-sm text-muted-foreground">
                       by {asset.creator?.name || asset.creator?.walletAddress.slice(0, 10)}
                     </p>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                      <ExternalLink className="h-3 w-3" />
-                    </Button>
+                    {asset.creator && (
+                      <Link href={`/profile/${asset.creator.walletAddress}`}>
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <ExternalLink className="h-3 w-3" />
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </div>
 
