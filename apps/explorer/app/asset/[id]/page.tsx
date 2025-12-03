@@ -191,7 +191,7 @@ export default function AssetDetailPage() {
       if (!asset?.biddingEnabled) return
 
       try {
-        const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/bids`)
+        const res = await fetch(`https://api-fusion.solume.cloud/assets/${asset.id}/bids`)
         if (res.ok) {
           const data = await res.json()
           setBids(data)
