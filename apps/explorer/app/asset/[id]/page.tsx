@@ -345,10 +345,13 @@ export default function AssetDetailPage() {
     try {
       // 1. Validate bid amount
       const currentHighestBid = (bids.length > 0 && bids[0]?.bid?.amount) ? parseFloat(bids[0].bid.amount) : parseFloat(asset?.biddingStartPrice || "0")
-      const minBid = bids.length > 0 ? currentHighestBid + 0.01 : currentHighestBid
 
-      if (parseFloat(bidAmount) < minBid) {
-        toast.error(`Bid must be at least ${minBid} CAMP`)
+      // Contract requires bid to be strictly greater than current highest bid (at least 1 wei more)
+      // We use a small increment to ensure it's definitely higher
+      const minBid = bids.length > 0 ? currentHighestBid + 0.000000000000000001 : currentHighestBid
+
+      if (parseFloat(bidAmount) <= currentHighestBid) {
+        toast.error(`Bid must be greater than ${currentHighestBid} CAMP (current highest bid)`)
         return
       }
 
@@ -385,16 +388,25 @@ export default function AssetDetailPage() {
       }
 
       // 3. Send payment to FusionMarketplace contract
-      const { encodeFunctionData } = await import('viem')
+      const { encodeFunctionData, parseEther } = await import('viem')
       const { FUSION_MARKETPLACE_ADDRESS, FUSION_MARKETPLACE_ABI } = await import('@/lib/fusionMarketplace')
 
-      const amountInWei = `0x${(parseFloat(bidAmount) * 1e18).toString(16)}`
+      // Convert bid amount to wei using parseEther for precision
+      const amountInWei = parseEther(bidAmount)
 
       // Encode placeBid function call
+      // IMPORTANT: Contract uses database assetId, not tokenId
+      console.log('Placing bid with:', {
+        assetId: asset.id,
+        bidAmount: bidAmount,
+        amountInWei: amountInWei.toString(),
+        contractAddress: FUSION_MARKETPLACE_ADDRESS
+      })
+
       const data = encodeFunctionData({
         abi: FUSION_MARKETPLACE_ABI,
         functionName: 'placeBid',
-        args: [BigInt(id)]
+        args: [BigInt(asset.id)]  // Use database ID, not tokenId
       })
 
       const txHash = await provider.request({
@@ -402,13 +414,13 @@ export default function AssetDetailPage() {
         params: [{
           from: targetAccount,
           to: FUSION_MARKETPLACE_ADDRESS,
-          value: amountInWei,
+          value: `0x${amountInWei.toString(16)}`,
           data: data
         }],
       })
 
-      // 4. Submit bid to backend
-      const res = await fetch(`https://api-fusion.solume.cloud/assets/${id}/bid`, {
+      // 4. Submit bid to backend (use database asset ID, not tokenId)
+      const res = await fetch(`https://api-fusion.solume.cloud/assets/${asset.id}/bid`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

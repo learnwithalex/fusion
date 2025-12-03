@@ -554,8 +554,11 @@ router.post("/:id/bid", authenticate, async (req, res) => {
     }
 
     try {
-        // 1. Verify transaction on-chain (similar to buy verification)
-        const receipt = await publicClient.getTransactionReceipt({ hash: tnxhash as any });
+        // 1. Wait for transaction confirmation on-chain
+        const receipt = await publicClient.waitForTransactionReceipt({
+            hash: tnxhash as any,
+            confirmations: 1
+        });
 
         if (receipt.status !== 'success') {
             return res.status(400).json({ error: "Transaction failed on chain" });
