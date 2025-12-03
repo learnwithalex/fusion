@@ -113,8 +113,13 @@ router.get("/me/stats", authenticate, async (req, res) => {
             ));
         const earnings = earningsResult[0]?.total || "0";
 
-        // TODO: Implement followers count when follower system is added
-        const followers = 0;
+        // Get followers count
+        const followersResult = await db.select({
+            count: sql<number>`count(*)`
+        })
+            .from(follows)
+            .where(eq(follows.followingId, userId));
+        const followers = Number(followersResult[0]?.count || 0);
 
         res.json({
             uploads,
