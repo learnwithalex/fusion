@@ -501,7 +501,7 @@ export default function AssetDetailPage() {
           const data = encodeFunctionData({
             abi: FUSION_MARKETPLACE_ABI,
             functionName: 'finalizeAuction',
-            args: [BigInt(id)]
+            args: [BigInt(asset.id)]
           })
 
           const txHash = await provider.request({
